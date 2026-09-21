@@ -1,0 +1,142 @@
+<!-- Modal Producto (Nuevo / Editar) — altura fija igual a la ventana de Ticket; la promoción va dentro de la misma ventana, debajo del precio -->
+<div class="modal-overlay" id="modalProducto">
+  <div class="modal modal-lg modal-alto-auto" style="--alto-max:min(calc(100vh - 40px),700px);max-width:800px;">
+    <div class="modal-header"><h3 id="modalProdTitle"><i class="fa fa-box" style="color:var(--accent);margin-right:8px;"></i>Nuevo Producto</h3><div class="modal-close" onclick="closeModal('modalProducto')"><i class="fa fa-xmark"></i></div></div>
+
+    <div class="modal-body prod-body-sc" style="padding:16px 24px;">
+      <input type="hidden" id="editProdId" value="">
+      <input type="hidden" id="prodDesc" value="">
+      <input type="hidden" id="prodStockMin" value="3">
+
+      <!-- ============ PRODUCTO ============ -->
+      <div>
+        <div class="prod-grid-img">
+          <div class="form-field" style="margin-bottom:0;">
+            <div class="img-upload-zone" onclick="document.getElementById('prodImgInput').click()" id="prodImgZone" style="height:126px;padding:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;box-sizing:border-box;">
+              <img id="imgPreview" src="" style="display:none;width:72px;height:72px;object-fit:cover;border-radius:8px;margin:0 auto 4px;">
+              <i class="fa fa-cloud-arrow-up" id="prodImgIcon" style="margin-bottom:4px;"></i>
+              <p style="font-size:12px;">Subir imagen</p>
+              <small style="font-size:10px;">JPG, PNG hasta 5MB</small>
+            </div>
+            <input type="file" id="prodImgInput" accept="image/*" style="display:none;" onchange="previewImg(this)">
+          </div>
+          <div>
+            <div class="prod-grid-pair" style="margin-bottom:10px;">
+              <div class="form-field" style="margin-bottom:0;">
+                <label>Código de Barras</label>
+                <div class="barcode-field">
+                  <input type="text" id="prodBarcode" placeholder="Ingresa o genera automático" oninput="checkBarcodeExists(this.value)" autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('prodNombre').focus();document.getElementById('prodNombre').select();}">
+                  <button class="barcode-auto-btn" onclick="genBarcode()"><i class="fa fa-wand-magic-sparkles"></i> Auto</button>
+                </div>
+              </div>
+              <div class="form-field" style="margin-bottom:0;">
+                <label>Categoría</label>
+                <div style="position:relative;">
+                  <input type="text" id="prodCatInput" placeholder="Buscar categoría..." autocomplete="off"
+                    style="width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:7px;color:var(--text);font-family:'Sora',sans-serif;font-size:13px;"
+                    oninput="filterSearchSelect('prodCatInput','prodCatDropdown',categorias)" onfocus="filterSearchSelect('prodCatInput','prodCatDropdown',categorias)"
+                    onblur="setTimeout(()=>{document.getElementById('prodCatDropdown').style.display='none';},150);"
+                    onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('prodCatDropdown').style.display='none';document.getElementById('prodCatVal').value=document.getElementById('prodCatInput').value;setTimeout(()=>{document.getElementById('prodNombre').focus();},50);}">
+                  <input type="hidden" id="prodCatVal">
+                  <div id="prodCatDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);z-index:300;max-height:180px;overflow-y:auto;margin-top:2px;"></div>
+                </div>
+              </div>
+            </div>
+            <div class="prod-grid-pair">
+              <div class="form-field" style="margin-bottom:0;"><label>Nombre del Producto *</label><input type="text" id="prodNombre" placeholder="Ej: Arroz Extra 1kg" onkeydown="if(event.key==='Enter'){event.preventDefault();checkNombreExists(this.value);setTimeout(()=>{document.getElementById('prodStock').focus();},50);}" autocomplete="off"></div>
+              <div class="form-field" style="margin-bottom:0;">
+                <label>Cantidad en Stock *</label>
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <input type="number" id="prodStock" placeholder="0" style="flex:1;min-width:0;" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('prodCosto').focus();}">
+                  <label class="toggle" style="flex-shrink:0;" title="Stock fijo diario: cada día el stock vuelve a la cantidad que pusiste arriba"><input type="checkbox" id="prodFijoOn" onchange="toggleStockFijo()"><span class="toggle-slider"></span></label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Costo, ganancia y precio de venta — junto a la promoción, al costado; promoción ocupa todo el alto de esta fila -->
+        <div class="prod-grid-costo-promo" style="margin-top:14px;align-items:stretch;">
+          <div>
+            <!-- Se vende por: Unidad / Granel / Paquete -->
+            <div class="form-field" style="margin-bottom:14px;">
+              <label>Se vende por</label>
+              <div style="display:flex;gap:8px;align-items:stretch;">
+                <div id="unidadBtn" onclick="setUnidad('unidad')" style="flex:1;padding:14px 6px;background:rgba(245,158,11,0.15);border:2px solid var(--accent);border-radius:8px;text-align:center;cursor:pointer;font-size:12px;font-weight:600;color:var(--accent);white-space:nowrap;display:flex;align-items:center;justify-content:center;">
+                  <i class="fa fa-box" style="margin-right:5px;"></i>Unidad
+                </div>
+                <div id="kgBtn" onclick="setUnidad('kg')" style="flex:1;padding:14px 6px;background:var(--surface2);border:2px solid var(--border);border-radius:8px;text-align:center;cursor:pointer;font-size:12px;font-weight:600;color:var(--text3);white-space:nowrap;display:flex;align-items:center;justify-content:center;">
+                  <i class="fa fa-scale-balanced" style="margin-right:5px;"></i>Granel (kg)
+                </div>
+                <div id="paqBtn" onclick="setUnidad('paquete')" style="flex:1;padding:14px 6px;background:var(--surface2);border:2px solid var(--border);border-radius:8px;text-align:center;cursor:pointer;font-size:12px;font-weight:600;color:var(--text3);white-space:nowrap;display:flex;align-items:center;justify-content:center;">
+                  <i class="fa fa-boxes-stacked" style="margin-right:5px;"></i>Paquete
+                </div>
+              </div>
+              <div id="paqBox" style="display:none;margin-top:8px;">
+                <input type="number" id="prodUnidadesPaquete" placeholder="Unidades x paquete *" min="2" step="1" style="width:100%;box-sizing:border-box;padding:10px 12px;background:var(--surface2);border:2px solid var(--border);border-radius:8px;color:var(--text);font-family:'Sora',sans-serif;font-size:13px;">
+              </div>
+              <input type="hidden" id="prodUnidad" value="unidad">
+            </div>
+
+            <span id="prodPrecioPor" style="display:none;">(por unidad)</span>
+            <div class="prod-grid4" id="prodCostoBox">
+              <div class="form-field" style="margin-bottom:0;"><label>Costo (S/.)</label><input type="number" id="prodCosto" placeholder="0.00" step="0.01" min="0" oninput="calcPrecioDesdeCosto()" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('prodGananciaPct').focus();}"></div>
+              <div class="form-field" style="margin-bottom:0;"><label>Ganancia (%)</label><input type="number" id="prodGananciaPct" placeholder="Ej: 30" step="0.1" oninput="calcPrecioDesdeCosto()" onkeydown="if(event.key==='Enter'){event.preventDefault();document.getElementById('prodPrecio').focus();}"></div>
+              <div class="form-field" style="margin-bottom:0;"><label>Precio venta *</label><input type="number" id="prodPrecio" placeholder="0.00" step="0.1" min="0" oninput="calcPctDesdePrecio()" onkeydown="if(event.key==='Enter'){event.preventDefault();saveProduct();}"></div>
+              <div class="form-field" style="margin-bottom:0;"><label>Ganancia / venta</label><div id="prodGananciaInfo" style="padding:9px 0;font-size:13px;font-weight:700;color:var(--text3);line-height:1.3;">Pon el costo</div></div>
+            </div>
+          </div>
+
+          <!-- ============ PROMOCIÓN ============ -->
+          <div id="promoSeccion" style="border:1px solid var(--border);border-radius:12px;padding:10px 14px 12px;background:var(--surface2);height:100%;box-sizing:border-box;display:flex;flex-direction:column;">
+            <input type="hidden" id="prodPromoTipo" value="">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;font-weight:700;color:#f59e0b;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">
+              <span><i class="fa fa-star" style="margin-right:6px;"></i>Promoción</span>
+              <span style="display:none;">Precio: <b id="promoPrecioActual" style="color:var(--text);">—</b></span>
+            </div>
+
+            <div class="prod-chips" id="promoTipos" style="gap:8px;">
+              <button type="button" class="prod-chip activo" data-tipo="" onclick="setPromoTipo('')" style="flex:1;justify-content:center;padding:10px 14px;"><i class="fa fa-ban"></i> Sin promoción</button>
+              <button type="button" class="prod-chip" data-tipo="cantidad" onclick="setPromoTipo('cantidad')" style="flex:1;justify-content:center;padding:10px 14px;"><i class="fa fa-gift"></i> Por cantidad</button>
+            </div>
+
+            <!-- Por cantidad: promociones comunes (2x1, 3x2...) o "X por S/ Y" — siempre visible, se bloquea en gris si no está seleccionado "Por cantidad" -->
+            <div id="promoPanel-cantidad" class="prod-promo-panel promo-disabled" style="display:block;margin-top:10px;">
+              <input type="hidden" id="prodNxmLleva" value="">
+              <input type="hidden" id="prodNxmPaga" value="">
+              <label class="prod-mini-lbl">Elige promoción</label>
+              <div class="prod-chips" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px;">
+                <button type="button" class="prod-chip prod-chip-sm" data-nxm="2-1" onclick="setNxm(2,1)" style="justify-content:center;">2x1</button>
+                <button type="button" class="prod-chip prod-chip-sm" data-nxm="3-2" onclick="setNxm(3,2)" style="justify-content:center;">3x2</button>
+                <button type="button" class="prod-chip prod-chip-sm" data-nxm="4-3" onclick="setNxm(4,3)" style="justify-content:center;">4x3</button>
+                <button type="button" class="prod-chip prod-chip-sm" data-nxm="5-4" onclick="setNxm(5,4)" style="justify-content:center;">5x4</button>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                <input type="number" id="prodPackLleva" placeholder="Lleva" min="2" step="1" oninput="usarPack()" style="width:100%;box-sizing:border-box;padding:9px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:7px;color:var(--text);font-family:'Sora',sans-serif;font-size:13px;">
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <span style="font-size:12px;color:var(--text3);font-weight:600;white-space:nowrap;">x S/.</span>
+                  <input type="number" id="prodPackPrecio" placeholder="5.00" step="0.1" min="0" oninput="usarPack()" style="width:100%;box-sizing:border-box;padding:9px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:7px;color:var(--text);font-family:'Sora',sans-serif;font-size:13px;">
+                </div>
+              </div>
+            </div>
+
+            <!-- Campos ocultos: se mantienen por compatibilidad con productos que ya tenían un precio en oferta guardado -->
+            <input type="hidden" id="prodPromoPrecio" value="">
+            <input type="hidden" id="prodPromoPct" value="">
+
+            <div id="promoExtra" class="promo-disabled prod-promo-panel" style="margin-top:10px;">
+              <label class="prod-mini-lbl">Válida hasta (opcional)</label>
+              <input type="date" id="prodPromoHasta" style="width:100%;max-width:180px;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:7px;color:var(--text);font-family:'Sora',sans-serif;font-size:13px;">
+              <div id="prodPromoInfo" style="font-size:12px;color:var(--text3);margin-top:8px;line-height:1.3;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modalProducto')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveProduct()"><i class="fa fa-floppy-disk"></i> Guardar Producto</button>
+    </div>
+  </div>
+</div>

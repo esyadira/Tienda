@@ -1,0 +1,58 @@
+/* ====== PRODUCT GRID ====== */
+.product-grid-view{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;align-content:flex-start;padding:16px;}
+.prod-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;transition:all 0.2s;cursor:pointer;display:flex;flex-direction:column;height:190px;}
+.prod-card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.3);}
+.prod-card:active{transform:translateY(0) scale(0.97);box-shadow:none;border-color:var(--accent);transition:all 0.08s;}
+.prod-card-img{height:120px;flex-shrink:0;background:#ffffff;display:flex;align-items:center;justify-content:center;font-size:36px;position:relative;overflow:hidden;border-radius:var(--radius-sm) var(--radius-sm) 0 0;}
+.prod-card-img img{width:100%;height:100%;object-fit:contain;padding:8px;}
+.prod-card-body{padding:8px 10px;flex-shrink:0;display:flex;flex-direction:column;}
+.prod-card-name{font-size:12px;font-weight:600;margin-bottom:2px;word-break:break-word;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.prod-card-cat{font-size:10px;color:var(--text3);margin-bottom:4px;}
+.prod-card-footer{display:flex;align-items:center;justify-content:space-between;}
+.prod-card-price{font-size:14px;font-weight:700;color:var(--accent);}
+.prod-card-stock{font-size:10px;padding:1px 5px;border-radius:10px;font-weight:700;line-height:1.4;}
+
+
+/* ====== MODAL PRODUCTO: barra de opciones (Producto · Promociones) ====== */
+.prod-tabs{display:flex;gap:8px;padding:10px 24px;border-bottom:1px solid var(--border);background:var(--surface2);flex-shrink:0;flex-wrap:wrap;}
+.prod-tab{display:inline-flex;align-items:center;gap:7px;padding:8px 16px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text2);font-family:'Sora',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;}
+.prod-tab:hover{border-color:var(--accent);}
+.prod-tab.activo{border-color:var(--accent);background:rgba(245,158,11,0.14);color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset;}
+.prod-tab-dot{width:8px;height:8px;border-radius:50%;background:#10b981;display:none;}
+.prod-tab-dot.on{display:inline-block;}
+.prod-tab-count{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;background:var(--surface3);color:var(--text2);padding:1px 7px;border-radius:10px;}
+.prod-tab.activo .prod-tab-count{background:rgba(245,158,11,0.25);color:var(--accent);}
+/* el contenido hace scroll con la rueda pero sin mostrar la barra */
+.prod-body-sc{scrollbar-width:none;-ms-overflow-style:none;}
+.prod-body-sc::-webkit-scrollbar{display:none;width:0;height:0;}
+.prod-grid-img{display:grid;grid-template-columns:170px 1fr;gap:14px;align-items:start;}
+.prod-grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+.prod-grid4{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:12px;}
+.prod-grid-pair{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+#prodCostoBox{grid-template-columns:1fr 1fr!important;}
+/* costo/ganancia y promoción van una al costado de la otra, no una debajo de la otra */
+.prod-grid-costo-promo{display:grid;grid-template-columns:1fr 1.08fr;gap:14px;align-items:start;}
+@media (max-width:820px){
+  .prod-grid-img{grid-template-columns:1fr;}
+  .prod-grid3,.prod-grid4{grid-template-columns:1fr 1fr;}
+  .prod-grid-costo-promo{grid-template-columns:1fr;}
+}
+/* encabezado de cada opción */
+.prod-opt-head{display:flex;gap:14px;align-items:flex-start;margin-bottom:16px;}
+.prod-opt-ico{width:42px;height:42px;border-radius:12px;background:var(--ocbg);color:var(--oc);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.prod-opt-head h4{font-size:15px;font-weight:700;margin-bottom:3px;}
+.prod-opt-head p{font-size:12px;color:var(--text3);line-height:1.5;margin:0;}
+.prod-resumen{display:flex;gap:12px;margin-bottom:16px;}
+.prod-resumen>div{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;}
+.prod-resumen span{display:block;font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;}
+.prod-resumen b{font-size:16px;}
+/* botones de tipo de promoción */
+.prod-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;}
+.prod-chip{display:inline-flex;align-items:center;gap:7px;padding:7px 13px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--text2);font-family:'Sora',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;}
+.prod-chip:hover{border-color:#f59e0b;}
+.prod-chip.activo{border-color:#f59e0b;background:rgba(245,158,11,0.16);color:#f59e0b;}
+.prod-chip-sm{padding:5px 12px;font-size:12px;font-weight:800;}
+.prod-promo-panel{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;}
+.promo-disabled{opacity:.45;filter:grayscale(.4);pointer-events:none;user-select:none;transition:opacity .15s;}
+.promo-disabled input,.promo-disabled .prod-chip,.promo-disabled button{cursor:not-allowed!important;}
+.prod-mini-lbl{display:block;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}

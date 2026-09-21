@@ -1,0 +1,22 @@
+      <!-- ===== VENDEDORES ===== -->
+      <div class="page" id="page-vendedores" style="height:calc(100vh - var(--header-h) - 48px); overflow:hidden;">
+        <div class="page-header" style="flex-shrink:0;">
+          <div class="page-title"><h1>Usuarios</h1><p>Gestión de personal y turnos</p></div>
+          <button class="btn btn-primary" onclick="openModal('modalVendedor')"><i class="fa fa-user-plus"></i> Nuevo Usuario</button>
+        </div>
+        <div class="table-wrap" style="flex:1; overflow:hidden; display:flex; flex-direction:column; min-height:0;">
+          <div class="table-toolbar" style="flex-shrink:0;">
+            <div class="table-search"><i class="fa fa-magnifying-glass"></i><input type="text" id="vendSearchInput" placeholder="Buscar vendedor..." oninput="filterTable(this,'vendTable')"></div>
+            <button class="btn btn-secondary btn-sm" onclick="clearVendFilter()"><i class="fa fa-broom"></i> Limpiar</button>
+            <span id="vendContador" style="margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:11px;background:rgba(245,158,11,0.1);color:var(--accent);padding:2px 8px;border-radius:20px;font-weight:700;"></span>
+          </div>
+          <div style="flex:1; overflow-y:auto; min-height:0;">
+            <table id="vendTable" style="width:100%;border-collapse:collapse;">
+              <thead style="position:sticky;top:0;z-index:10;background:var(--surface2);">
+                <tr><th>Vendedor</th><th>Usuario</th><th>Permisos</th><th>Estado</th><th>Acciones</th></tr>
+              </thead>
+              <tbody id="vendTbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>

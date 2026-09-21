@@ -1,0 +1,25 @@
+<div class="modal-overlay" id="modalCategoria">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-header">
+      <h3 id="modalCatTitle"><i class="fa fa-tag" style="color:var(--accent);margin-right:8px;"></i>Nueva Categoría</h3>
+      <div class="modal-close" onclick="closeModal('modalCategoria')"><i class="fa fa-xmark"></i></div>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editCatOriginal">
+      <div class="form-field">
+        <label>Nombre de la Categoría *</label>
+        <input type="text" id="catNombre" placeholder="Ej: Bebidas Premium">
+      </div>
+      <div class="form-field">
+        <label>Icono / Emoji</label>
+        <input type="text" id="catEmoji" placeholder="Ej: 🥤 o 🧊">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modalCategoria')">Cancelar</button>
+      <button class="btn btn-primary" id="btnGuardarCategoria" onclick="saveCategoria()">
+        <i class="fa fa-floppy-disk"></i> Guardar Categoría
+      </button>
+    </div>
+  </div>
+</div>

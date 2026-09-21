@@ -1,0 +1,29 @@
+:root {
+  --bg: #f0f2f5;
+  --surface: #ffffff;
+  --surface2: #f1f5f9;
+  --surface3: #e2e8f0;
+  --border: #d1d5db;
+  --accent: #f59e0b;
+  --accent2: #f59e0b; /* se actualiza dinámicamente con --accent */
+  --accent3: #10b981;
+  --danger: #ef4444;
+  --warning: #f97316;
+  --text: #1f2937;
+  --text2: #4b5563;
+  --text3: #9ca3af;
+  --sidebar-w: 240px;
+  --header-h: 64px;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.12);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+select{color:var(--text);background:var(--surface2);}
+html,body{height:100%;font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);overflow:hidden;}
+
+/* ====== SCROLLBAR ====== */
+::-webkit-scrollbar{width:6px;height:6px;}
+::-webkit-scrollbar-track{background:var(--surface);}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+

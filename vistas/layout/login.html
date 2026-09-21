@@ -1,0 +1,33 @@
+<div id="loginScreen">
+  <div class="login-bg-grid"></div>
+  <div class="login-glow"></div>
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-icon" id="loginLogoIcon">🏪</div>
+      <div>
+        <h1 id="loginNombreNegocio">BodegaPOS</h1>
+        <span>Sistema de Punto de Venta</span>
+      </div>
+    </div>
+    <h2 class="login-title">Bienvenido 👋</h2>
+    <p class="login-subtitle">Ingresa tus credenciales para continuar</p>
+    <div class="login-error" id="loginError"><i class="fa fa-circle-exclamation"></i> Usuario o contraseña incorrectos</div>
+    <div class="form-group">
+      <label>Usuario</label>
+      <div class="form-input-wrap">
+        <i class="fa fa-user"></i>
+        <input class="form-input" type="text" id="loginUser" placeholder="Ingresa tu usuario">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Contraseña</label>
+      <div class="form-input-wrap" style="position:relative;">
+        <i class="fa fa-lock"></i>
+        <input class="form-input" type="password" id="loginPass" placeholder="••••••••" style="padding-right:52px;">
+        <button type="button" onclick="toggleLoginPass()" id="togglePassBtn" style="position:absolute;right:40px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text3);font-size:15px;padding:4px;line-height:1;display:flex;align-items:center;justify-content:center;transition:color 0.2s;" title="Ver contraseña"><i class="fa fa-eye" id="togglePassIcon"></i></button>
+      </div>
+    </div>
+    <button class="btn-login" onclick="doLogin()"><i class="fa fa-arrow-right-to-bracket"></i> Ingresar al Sistema</button>
+    <p class="login-hint">Ingresa con el usuario creado durante la configuración inicial.</p>
+  </div>
+</div>

@@ -1,0 +1,24 @@
+    <!-- SIDEBAR -->
+    <nav class="sidebar collapsed" id="sidebar">
+      <div class="nav-section">
+        <div class="nav-section-label">Principal</div>
+        <div class="nav-item active" onclick="showPage('dashboard')"><i class="fa fa-gauge-high"></i> Dashboard</div>
+        <div class="nav-item" onclick="showPage('ventas')"><i class="fa fa-cash-register"></i> Punto de Venta</div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-label">Gestión</div>
+        <div class="nav-item" onclick="showPage('productos')"><i class="fa fa-boxes-stacked"></i> Productos</div>
+        <div class="nav-item" onclick="showPage('clientes')"><i class="fa fa-users"></i> Clientes</div>
+        <div class="nav-item" onclick="showPage('categorias')"><i class="fa fa-tags"></i> Categorías</div>
+        <div class="nav-item" onclick="showPage('compras')"><i class="fa fa-basket-shopping"></i> Compras</div>
+        <div class="nav-item" onclick="showPage('vendedores')"><i class="fa fa-id-badge"></i> Usuarios</div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-label">Sistema</div>
+        <div class="nav-item" onclick="showPage('reportes')"><i class="fa fa-chart-bar"></i> Reportes</div>
+        <div class="nav-item" onclick="showPage('configuracion')"><i class="fa fa-gear"></i> Configuración</div>
+      </div>
+      <div class="sidebar-footer">
+        <div class="logout-btn" onclick="doLogout()"><i class="fa fa-right-from-bracket"></i> Cerrar Sesión</div>
+      </div>
+    </nav>

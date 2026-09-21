@@ -1,0 +1,154 @@
+<!-- ====== SETUP SCREEN (Primera vez) ====== -->
+<div id="setupScreen">
+  <div class="login-bg-grid"></div>
+  <div class="login-glow"></div>
+  <div class="setup-card">
+    <div class="setup-steps">
+      <div class="setup-step-dot active" id="setupDot1"></div>
+      <div class="setup-step-dot" id="setupDot2"></div>
+      <div class="setup-step-dot" id="setupDot3"></div>
+    </div>
+
+    <!-- PASO 1: Bienvenida + datos del admin -->
+    <div id="setupStep1">
+      <div class="login-logo" style="margin-bottom:20px;">
+        <div class="login-logo-icon"><i class="fa fa-store"></i></div>
+        <div>
+          <h1>BodegaPOS</h1>
+          <span>Sistema de Punto de Venta</span>
+        </div>
+      </div>
+      <div class="setup-badge"><i class="fa fa-shield-halved"></i> Configuración inicial</div>
+      <h2 style="font-size:22px;font-weight:700;margin-bottom:6px;letter-spacing:-0.5px;">¡Bienvenido!</h2>
+      <p style="color:var(--text3);font-size:13px;margin-bottom:24px;">Crea la cuenta de administrador para comenzar a usar el sistema.</p>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+        <div class="form-group" style="margin:0;">
+          <label>Nombre *</label>
+          <input type="text" class="form-input" id="setupNombre" placeholder="Tu nombre" style="padding-left:14px;">
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label>Apellido</label>
+          <input type="text" class="form-input" id="setupApellido" placeholder="Apellido" style="padding-left:14px;">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Usuario *</label>
+        <div class="form-input-wrap">
+          <i class="fa fa-at"></i>
+          <input type="text" class="form-input" id="setupUsuario" placeholder="Ej: admin" autocomplete="off">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Contraseña *</label>
+        <div class="form-input-wrap">
+          <i class="fa fa-lock"></i>
+          <input type="password" class="form-input" id="setupPassword" placeholder="Mínimo 4 caracteres" oninput="setupCheckPass(this.value)" style="padding-right:44px;">
+          <span onclick="setupTogglePass('setupPassword','setupPassEye')" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--text3);font-size:14px;z-index:2;" id="setupPassEye"><i class="fa fa-eye"></i></span>
+          <div class="setup-pass-strength" style="position:absolute;bottom:0;left:0;right:0;border-radius:0 0 8px 8px;">
+            <div class="setup-pass-strength-bar" id="setupPassBar"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Confirmar Contraseña *</label>
+        <div class="form-input-wrap">
+          <i class="fa fa-lock"></i>
+          <input type="password" class="form-input" id="setupPasswordConfirm" placeholder="Repite la contraseña" style="padding-right:44px;">
+          <span onclick="setupTogglePass('setupPasswordConfirm','setupPassEye2')" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--text3);font-size:14px;z-index:2;" id="setupPassEye2"><i class="fa fa-eye"></i></span>
+        </div>
+      </div>
+
+      <div id="setupError1" style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:10px 14px;font-size:13px;color:#dc2626;margin-bottom:16px;display:none;"></div>
+
+      <button class="btn-login" onclick="setupNext()"><i class="fa fa-arrow-right" style="margin-right:8px;"></i>Continuar</button>
+    </div>
+
+    <!-- PASO 2: Datos del negocio -->
+    <div id="setupStepNegocio" style="display:none;">
+      <div class="setup-badge"><i class="fa fa-store"></i> Datos del negocio</div>
+      <h2 style="font-size:20px;font-weight:700;margin-bottom:6px;letter-spacing:-0.5px;">Tu negocio</h2>
+      <p style="color:var(--text3);font-size:13px;margin-bottom:20px;">Estos datos aparecerán en el encabezado y en los tickets. Podrás cambiarlos después en Configuración.</p>
+
+      <div class="form-group">
+        <label>Nombre del negocio *</label>
+        <div class="form-input-wrap">
+          <i class="fa fa-store"></i>
+          <input type="text" class="form-input" id="setupNegNombre" placeholder="Ej: Bodega Don José" autocomplete="off">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Dirección *</label>
+        <div class="form-input-wrap">
+          <i class="fa fa-location-dot"></i>
+          <input type="text" class="form-input" id="setupNegDir" placeholder="Ej: Jr. Los Olivos 123, Lima" autocomplete="off">
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px;">
+        <div class="form-group" style="margin:0;">
+          <label>Teléfono (opcional)</label>
+          <div class="form-input-wrap">
+            <i class="fa fa-phone"></i>
+            <input type="text" class="form-input" id="setupNegTel" placeholder="999 123 456" autocomplete="off">
+          </div>
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label>Correo (opcional)</label>
+          <div class="form-input-wrap">
+            <i class="fa fa-envelope"></i>
+            <input type="text" class="form-input" id="setupNegEmail" placeholder="bodega@gmail.com" autocomplete="off">
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px;">
+        <div id="setupLogoBox" onclick="document.getElementById('setupLogoInput').click()" title="Subir logo"
+          style="width:64px;height:64px;flex-shrink:0;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:28px;cursor:pointer;overflow:hidden;background:linear-gradient(135deg,#f59e0b,#d97706);box-shadow:0 6px 18px rgba(245,158,11,0.3);">🏪</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Logo (opcional)</div>
+          <div style="font-size:12px;color:var(--text3);line-height:1.5;">Si no subes una imagen se usará el ícono por defecto.</div>
+          <div style="margin-top:6px;display:flex;gap:12px;">
+            <button type="button" class="setup-link" onclick="document.getElementById('setupLogoInput').click()"><i class="fa fa-image"></i> Subir imagen</button>
+            <button type="button" class="setup-link" id="setupLogoQuitar" onclick="setupQuitarLogo()" style="display:none;color:#dc2626;"><i class="fa fa-trash"></i> Quitar</button>
+          </div>
+        </div>
+        <input type="file" id="setupLogoInput" hidden accept="image/*" onchange="setupLeerLogo(this)">
+      </div>
+
+      <div id="setupErrorNeg" style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:10px 14px;font-size:13px;color:#dc2626;margin-bottom:16px;display:none;"></div>
+
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-secondary" onclick="setupNegocioBack()" style="flex:1;padding:13px;"><i class="fa fa-arrow-left" style="margin-right:6px;"></i>Atrás</button>
+        <button class="btn-login" onclick="setupNegocioNext()" style="flex:2;"><i class="fa fa-arrow-right" style="margin-right:8px;"></i>Continuar</button>
+      </div>
+    </div>
+
+    <!-- PASO 3: Permisos del admin -->
+    <div id="setupStep2" style="display:none;">
+      <div class="setup-badge"><i class="fa fa-key"></i> Permisos del Administrador</div>
+      <h2 style="font-size:20px;font-weight:700;margin-bottom:6px;letter-spacing:-0.5px;">Accesos del sistema</h2>
+      <p style="color:var(--text3);font-size:13px;margin-bottom:20px;">El administrador tendrá acceso total por defecto. Puedes ajustarlo si lo deseas.</p>
+
+      <div class="setup-perm-grid" id="setupPermsGrid">
+        <!-- se genera con JS -->
+      </div>
+
+      <div style="margin-top:16px;padding:12px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.25);border-radius:8px;display:flex;align-items:center;gap:10px;">
+        <i class="fa fa-circle-check" style="color:#10b981;font-size:16px;flex-shrink:0;"></i>
+        <span style="font-size:12px;color:#4b5563;">El Administrador siempre estará <strong style="color:#059669;">activo</strong> y no podrá ser desactivado.</span>
+      </div>
+
+      <div id="setupError2" style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:10px 14px;font-size:13px;color:#dc2626;margin-top:14px;display:none;"></div>
+
+      <div style="display:flex;gap:10px;margin-top:20px;">
+        <button class="btn btn-secondary" onclick="setupBack()" style="flex:1;padding:13px;"><i class="fa fa-arrow-left" style="margin-right:6px;"></i>Atrás</button>
+        <button class="btn-login" onclick="setupFinish()" style="flex:2;"><i class="fa fa-check" style="margin-right:8px;"></i>Crear Administrador</button>
+      </div>
+    </div>
+  </div>
+</div>

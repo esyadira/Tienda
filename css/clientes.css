@@ -1,0 +1,4 @@
+/* ====== CLIENTES ====== */
+.client-debt-bar{height:6px;background:var(--surface3);border-radius:3px;overflow:hidden;width:80px;}
+.client-debt-fill{height:100%;border-radius:3px;background:var(--danger);}
+

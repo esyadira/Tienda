@@ -1,0 +1,25 @@
+<!-- Modal Orden de compra (nueva / editar / ver) -->
+<div class="modal-overlay" id="modalCompOrden">
+  <div class="modal modal-lg" style="max-width:900px;">
+    <div class="modal-header"><h3 id="cpOrdTitulo"><i class="fa fa-file-invoice" style="color:var(--accent);margin-right:8px;"></i>Nueva orden de compra</h3><div class="modal-close" onclick="closeModal('modalCompOrden')"><i class="fa fa-xmark"></i></div></div>
+    <div class="modal-body">
+      <div class="cp-form3">
+        <div class="form-field"><label>Proveedor</label><select id="cpOrdProv"></select></div>
+        <div class="form-field"><label>Fecha</label><input type="date" id="cpOrdFecha"></div>
+        <div class="form-field"><label>Nota (opcional)</label><input type="text" id="cpOrdNotas" placeholder="Ej: lo trae el martes"></div>
+      </div>
+      <div class="cp-search wide" id="cpOrdAddWrap" style="max-width:none;margin-bottom:12px;">
+        <i class="fa fa-plus"></i>
+        <input type="text" id="cpOrdAdd" placeholder="Buscar un producto para agregarlo..." autocomplete="off" oninput="cOrdBuscar(this.value)" onblur="setTimeout(()=>{document.getElementById('cpOrdAddDd').style.display='none';},150)">
+        <div class="cp-dd" id="cpOrdAddDd"></div>
+      </div>
+      <div class="cp-otable" id="cpOrdItems"></div>
+      <div class="cp-total"><span>Total estimado</span><b id="cpOrdTotal">S/. 0.00</b></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modalCompOrden')">Cerrar</button>
+      <button class="btn btn-primary" id="cpOrdGuardar" onclick="cOrdGuardar()"><i class="fa fa-floppy-disk"></i> Guardar orden</button>
+    </div>
+  </div>
+</div>
+<datalist id="cpFactores"><option value="1"></option><option value="6"></option><option value="12"></option><option value="24"></option></datalist>

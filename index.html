@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BodegaPOS — Sistema de Punto de Venta</title>
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#f59e0b">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="BodegaPOS">
+<link rel="apple-touch-icon" href="img/icon-192.png">
+
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;700&family=Courier+Prime:wght@400;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<!-- Estilos (el orden importa) -->
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/login.css">
+<link rel="stylesheet" href="css/header.css">
+<link rel="stylesheet" href="css/layout.css">
+<link rel="stylesheet" href="css/componentes.css">
+<link rel="stylesheet" href="css/vendedores.css">
+<link rel="stylesheet" href="css/productos.css">
+<link rel="stylesheet" href="css/ventas.css">
+<link rel="stylesheet" href="css/dashboard.css">
+<link rel="stylesheet" href="css/clientes.css">
+<link rel="stylesheet" href="css/compras.css">
+<link rel="stylesheet" href="css/reportes.css">
+<link rel="stylesheet" href="css/configuracion.css">
+<link rel="stylesheet" href="css/ticket.css">
+<link rel="stylesheet" href="css/caja.css">
+<link rel="stylesheet" href="css/responsive.css">
+<link rel="stylesheet" href="css/splash.css">
+</head>
+<body>
+
+<!--
+  index.html es solo el esqueleto. Cada <div data-incluir="..."> se reemplaza al cargar
+  por el contenido del archivo indicado (ver js/cargador.js). Requiere abrirse por http(s).
+-->
+
+<!-- ===== SPLASH SCREEN ===== -->
+<div data-incluir="vistas/layout/splash.html"></div>
+
+<!-- ===== CONFIGURACIÓN INICIAL (primera vez) ===== -->
+<div data-incluir="vistas/layout/setup.html"></div>
+
+<!-- ===== LOGIN ===== -->
+<div data-incluir="vistas/layout/login.html"></div>
+
+<!-- ===== EFECTIVO EN CAJA (al iniciar sesión) ===== -->
+<div data-incluir="vistas/modales/caja-inicial.html"></div>
+
+<!-- ===== APP ===== -->
+<div id="app">
+  <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
+  <div data-incluir="vistas/layout/header.html"></div>
+
+  <div class="app-body">
+    <div data-incluir="vistas/layout/sidebar.html"></div>
+
+    <!-- MAIN -->
+    <main class="main">
+      <div data-incluir="vistas/paginas/inicio.html"></div>
+      <div data-incluir="vistas/paginas/productos.html"></div>
+      <div data-incluir="vistas/paginas/categorias.html"></div>
+      <div data-incluir="vistas/paginas/ventas.html"></div>
+      <div data-incluir="vistas/paginas/clientes.html"></div>
+      <div data-incluir="vistas/paginas/compras.html"></div>
+      <div data-incluir="vistas/paginas/vendedores.html"></div>
+      <div data-incluir="vistas/paginas/reportes.html"></div>
+      <div data-incluir="vistas/paginas/configuracion.html"></div>
+    </main>
+  </div>
+
+  <!-- ===== MODALES ===== -->
+  <div data-incluir="vistas/modales/producto.html"></div>
+  <div data-incluir="vistas/modales/cliente.html"></div>
+  <div data-incluir="vistas/modales/vendedor.html"></div>
+  <div data-incluir="vistas/modales/ticket.html"></div>
+  <div data-incluir="vistas/modales/cobro.html"></div>
+  <div data-incluir="vistas/modales/ver-producto.html"></div>
+  <div data-incluir="vistas/modales/ver-cuenta.html"></div>
+  <div data-incluir="vistas/modales/confirmar-eliminar-cliente.html"></div>
+  <div data-incluir="vistas/modales/pagar-deuda.html"></div>
+  <div data-incluir="vistas/modales/peso.html"></div>
+  <div data-incluir="vistas/modales/compras-orden.html"></div>
+  <div data-incluir="vistas/modales/compras-recibir.html"></div>
+  <div data-incluir="vistas/modales/compras-proveedor.html"></div>
+  <div data-incluir="vistas/modales/productos-categoria.html"></div>
+  <div data-incluir="vistas/modales/categoria.html"></div>
+  <div data-incluir="vistas/modales/caja-detalle.html"></div>
+  <div data-incluir="vistas/modales/config.html"></div>
+  <div data-incluir="vistas/modales/pos-acciones.html"></div>
+</div>
+
+<!-- Supabase (debe cargarse antes que los scripts de la app) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Descarga las vistas, carga js/*.js en orden y arranca la app -->
+<script src="js/cargador.js"></script>
+</body>
+</html>

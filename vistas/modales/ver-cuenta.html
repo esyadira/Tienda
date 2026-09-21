@@ -1,0 +1,11 @@
+<!-- Modal Ver Cuenta Cliente -->
+<div class="modal-overlay" id="modalVerCuenta">
+  <div class="modal modal-lg">
+    <div class="modal-header"><h3><i class="fa fa-file-invoice-dollar" style="color:var(--accent2);margin-right:8px;"></i>Cuenta del Cliente</h3><div class="modal-close" onclick="closeModal('modalVerCuenta')"><i class="fa fa-xmark"></i></div></div>
+    <div class="modal-body" id="verCuentaBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modalVerCuenta')">Cerrar</button>
+      <button class="btn btn-secondary" onclick="exportCuentaJPG()" style="background:rgba(var(--accent-rgb,245,158,11),0.1);border-color:rgba(var(--accent-rgb,245,158,11),0.3);color:var(--accent);"><i class="fa fa-image"></i> Exportar JPG</button>
+    </div>
+  </div>
+</div>

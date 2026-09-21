@@ -1,0 +1,58 @@
+/* ====== CONFIGURACION ====== */
+.config-sections{display:block;}
+.config-nav{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:8px;height:fit-content;}
+.config-nav-item{padding:10px 12px;border-radius:8px;cursor:pointer;font-size:13px;display:flex;align-items:center;gap:8px;transition:all 0.15s;color:var(--text2);}
+.config-nav-item:hover{background:var(--surface2);}
+.config-nav-item.active{background:rgba(245,158,11,0.1);color:var(--accent);}
+.config-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;}
+.config-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--border);}
+.config-row:last-child{border:none;}
+.config-row-info h4{font-size:13px;font-weight:600;margin-bottom:2px;}
+.config-row-info p{font-size:12px;color:var(--text3);}
+.toggle{position:relative;width:44px;height:24px;flex-shrink:0;}
+.toggle input{opacity:0;width:0;height:0;}
+.toggle-slider{position:absolute;inset:0;background:var(--surface3);border-radius:24px;cursor:pointer;transition:0.3s;border:1px solid var(--border);}
+.toggle-slider::before{content:'';position:absolute;height:18px;width:18px;left:2px;bottom:2px;background:#fff;border-radius:50%;transition:0.3s;}
+.toggle input:checked + .toggle-slider{background:var(--accent);}
+.toggle input:checked + .toggle-slider::before{transform:translateX(20px);}
+
+
+/* ====== INICIO DE CONFIGURACIÓN (accesos por categoría) ====== */
+.cfg-seccion{margin-bottom:26px;}
+.cfg-sec-title{display:flex;align-items:center;gap:12px;font-size:12px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;}
+.cfg-sec-title::after{content:'';flex:1;height:1px;background:var(--border);}
+.cfg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;}
+
+.cfg-tile{display:flex;flex-direction:column;align-items:center;text-align:center;padding:20px 12px 16px;cursor:pointer;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);transition:all 0.18s;position:relative;overflow:hidden;}
+.cfg-tile::before{content:'';position:absolute;left:0;right:0;top:0;height:3px;background:var(--tc);opacity:0;transition:opacity 0.18s;}
+.cfg-tile:hover{transform:translateY(-3px);border-color:var(--tc);box-shadow:0 12px 28px rgba(0,0,0,0.08);}
+.cfg-tile:hover::before{opacity:1;}
+.cfg-tile:active{transform:translateY(-1px);}
+.cfg-tile-icon{width:52px;height:52px;border-radius:15px;display:flex;align-items:center;justify-content:center;font-size:21px;
+  color:var(--tc);background:var(--tcbg);margin-bottom:12px;transition:transform 0.18s;}
+.cfg-tile:hover .cfg-tile-icon{transform:scale(1.08);}
+.cfg-tile-label{font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px;}
+.cfg-tile-desc{font-size:11px;color:var(--text3);line-height:1.4;}
+
+/* Cada opción se abre en una ventana */
+#modalConfig .modal{max-width:640px;}
+#modalConfig .config-panel{background:transparent;border:none;border-radius:0;padding:0;}
+#modalConfig .config-panel > h3:first-child{display:none;}
+
+@media (max-width:640px){
+  .cfg-grid{grid-template-columns:repeat(2,1fr);gap:10px;}
+  .cfg-tile{padding:14px 8px 12px;}
+  .cfg-tile-icon{width:44px;height:44px;font-size:18px;margin-bottom:8px;}
+}
+
+
+/* ====== FORMAS DE PAGO (panel de configuración) ====== */
+.cfg-pago-card{display:flex;align-items:center;gap:14px;padding:14px;margin-bottom:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;}
+.cfg-pago-icon{width:46px;height:46px;flex-shrink:0;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:19px;color:var(--mc);background:var(--mcbg);}
+.cfg-pago-info{flex:1;min-width:0;}
+.cfg-pago-info h4{font-size:13px;font-weight:700;margin-bottom:2px;}
+.cfg-pago-info p{font-size:12px;color:var(--text3);line-height:1.4;}
+.cfg-pagos-preview{display:flex;gap:8px;flex-wrap:wrap;}
+.cfg-pago-chip{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:8px;font-size:12px;font-weight:700;color:var(--mc);background:var(--mcbg);border:1.5px solid var(--mc);}
+.toggle input:disabled + .toggle-slider{cursor:not-allowed;}

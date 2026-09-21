@@ -1,0 +1,328 @@
+<!-- Configuración: cada opción se abre en esta ventana -->
+<div class="modal-overlay" id="modalConfig">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="cfgModalTitulo">Configuración</h3>
+      <div class="modal-close" onclick="closeModal('modalConfig')"><i class="fa fa-xmark"></i></div>
+    </div>
+    <div class="modal-body">
+      <div class="config-panel" id="cfg-negocio">
+        <h3 style="font-size:15px;font-weight:700;margin-bottom:4px;">Datos del Negocio</h3>
+        <p style="font-size:12px;color:var(--text3);margin-bottom:20px;">Estos datos aparecen en el encabezado del sistema y en los tickets de venta.</p>
+        <div style="display: flex; gap: 20px; align-items: start; margin-bottom: 15px;">
+          <div style="flex: 1;">
+            <div class="form-field">
+              <label>Nombre del Negocio</label>
+              <input type="text" id="cfg-nombre-negocio" placeholder="Ej: Bodega Don José" oninput="cfgPreviewNombre(this.value)">
+              <small style="font-size:11px;color:var(--text3);margin-top:4px;display:block;">Vista previa en header: <span id="cfg-preview-nombre-text" style="color:var(--accent);font-weight:600;">—</span></small>
+            </div>
+            <div class="form-field"><label>Teléfono (Opcional)</label><input type="text" id="cfg-tel-negocio" placeholder="Ej: 999 123 456"></div>
+            <div class="form-field"><label>Correo (Opcional)</label><input type="text" id="cfg-email-negocio" placeholder="Ej: bodega@gmail.com"></div>
+            <div class="form-field"><label>Dirección (Opcional)</label><input type="text" id="cfg-dir-negocio" placeholder="Ej: Jr. Los Olivos 123, Lima"></div>
+          </div>
+          <div style="width: 150px; text-align: center;">
+            <label style="display: block; margin-bottom: 8px; font-size: 12px; font-weight:600; color:var(--text2); text-transform:uppercase; letter-spacing:0.5px;">Logo del Negocio</label>
+            <div id="preview-logo" style="width: 100%; height: 100px; border: 2px dashed var(--border); border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; overflow: hidden; transition:all 0.2s;" onclick="document.getElementById('cfg-logo-input').click()" onmouseenter="this.style.borderColor='var(--accent)'" onmouseleave="this.style.borderColor='var(--border)'">
+              <i class="fa fa-image" style="font-size: 24px; color: var(--text3);"></i>
+            </div>
+            <small style="font-size:11px;color:var(--text3);display:block;margin-top:6px;">Clic para subir imagen<br>JPG, PNG hasta 5MB</small>
+            <button class="btn btn-danger btn-sm" style="margin-top:8px;width:100%;font-size:11px;" onclick="eliminarLogoNegocio()"><i class="fa fa-trash"></i> Quitar logo</button>
+            <input type="file" id="cfg-logo-input" hidden accept="image/*" onchange="leerImagenLogo(this)">
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-primary" onclick="guardarNegocio()"><i class="fa fa-floppy-disk"></i> Guardar Negocio</button>
+        </div>
+      </div>
+
+      <div class="config-panel" id="cfg-apariencia" style="display:none;">
+        <h3 style="font-size:15px;font-weight:700;margin-bottom:4px;">Apariencia</h3>
+        <p style="font-size:12px;color:var(--text3);margin-bottom:20px;">Personaliza los colores y tema visual del sistema en tiempo real.</p>
+        
+        <div class="config-row">
+          <div class="config-row-info"><h4>Modo Oscuro</h4><p>Cambia el tema entre oscuro y claro</p></div>
+          <label class="toggle"><input type="checkbox" id="cfg-dark-mode" onchange="aplicarModoOscuro(this.checked);"><span class="toggle-slider"></span></label>
+        </div>
+
+        <div class="form-field" style="margin-top:16px;">
+          <label>Color de Acento</label>
+          <div style="display:flex;gap:12px;align-items:center;margin-top:6px;">
+            <input type="color" id="cfg-color-acento" onchange="aplicarColorPreview(this.value)" style="height:44px;width:60px;padding:2px;cursor:pointer;border-radius:8px;border:1px solid var(--border);background:var(--surface2);">
+            <div>
+              <div style="font-size:12px;color:var(--text3);margin-bottom:6px;">Colores predefinidos:</div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;" id="colorPresets">
+                <div onclick="aplicarColorPreview('#f59e0b')" style="width:28px;height:28px;background:#f59e0b;border-radius:6px;cursor:pointer;border:2px solid transparent;transition:all 0.2s;" title="Ámbar (defecto)"></div>
+                <div onclick="aplicarColorPreview('#3b82f6')" style="width:28px;height:28px;background:#3b82f6;border-radius:6px;cursor:pointer;border:2px solid transparent;transition:all 0.2s;" title="Azul"></div>
+                <div onclick="aplicarColorPreview('#10b981')" style="width:28px;height:28px;background:#10b981;border-radius:6px;cursor:pointer;border:2px solid transparent;transition:all 0.2s;" title="Verde"></div>
+                <div onclick="aplicarColorPreview('#a855f7')" style="width:28px;height:28px;background:#a855f7;border-radius:6px;cursor:pointer;border:2px solid transparent;transition:all 0.2s;" title="Violeta"></div>
+                <div onclick="aplicarColorPreview('#ef4444')" style="width:28px;height:28px;background:#ef4444;border-radius:6px;cursor:pointer;border:2px solid transparent;transition:all 0.2s;" title="Rojo"></div>
+                <div onclick="aplicarColorPreview('#f97316')" style="width:28px;height:28px;background:#f97316;border-radius:6px;cursor:pointer;border:2px solid transparent;transition:all 0.2s;" title="Naranja"></div>
+                <div onclick="aplicarColorPreview('#06b6d4')" style="width:28px;height:28px;background:#06b6d4;border-radius:6px;cursor:pointer;border:2px solid transparent;transition:all 0.2s;" title="Cyan"></div>
+                <div onclick="aplicarColorPreview('#ec4899')" style="width:28px;height:28px;background:#ec4899;border-radius:6px;cursor:pointer;border:2px solid transparent;transition:all 0.2s;" title="Rosa"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;margin:16px 0;">
+          <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">Vista previa del color actual</div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <button class="btn btn-primary btn-sm" style="pointer-events:none;">Botón principal</button>
+            <span class="badge badge-green">Activo</span>
+            <span style="color:var(--accent);font-weight:700;font-size:14px;">S/. 29.90</span>
+            <div style="width:20px;height:20px;background:var(--accent);border-radius:4px;"></div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-primary" onclick="guardarApariencia()"><i class="fa fa-floppy-disk"></i> Guardar Apariencia</button>
+          <button class="btn btn-secondary" onclick="resetearApariencia()"><i class="fa fa-palette"></i> Restablecer colores</button>
+        </div>
+      </div>
+
+      <div class="config-panel" id="cfg-backup" style="display:none;">
+        <h3 style="font-size:15px;font-weight:700;margin-bottom:4px;">Seguridad y Datos</h3>
+        <p style="font-size:12px;color:var(--text3);margin-bottom:20px;">Gestiona copias de seguridad, contraseña y privacidad del sistema.</p>
+
+        <!-- BACKUP -->
+        <div style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Copias de Seguridad</div>
+        <div class="config-row">
+          <div class="config-row-info"><h4>Exportar Backup Completo</h4><p>Descarga todos los datos: productos, clientes, ventas, configuración.</p></div>
+          <button class="btn btn-primary btn-sm" onclick="exportarBackup()"><i class="fa fa-download"></i> Descargar .json</button>
+        </div>
+        <div class="config-row">
+          <div class="config-row-info"><h4>Restaurar desde Backup</h4><p>Carga un archivo .json exportado previamente para restaurar tus datos.</p></div>
+          <button class="btn btn-secondary btn-sm" onclick="document.getElementById('importInput').click()"><i class="fa fa-upload"></i> Cargar Archivo</button>
+          <input type="file" id="importInput" style="display:none" accept=".json" onchange="importarBackup(this)">
+        </div>
+        <div id="cfgBackupInfo" style="display:none;padding:10px 12px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);border-radius:8px;font-size:12px;color:var(--accent3);margin-top:8px;"></div>
+
+        <!-- ZONA DE PELIGRO -->
+        <div style="font-size:12px;font-weight:600;color:var(--danger);text-transform:uppercase;letter-spacing:0.5px;margin:20px 0 10px;">⚠️ Zona de Peligro</div>
+        <div style="border:1px dashed rgba(239,68,68,0.4);border-radius:8px;padding:16px;">
+          <div class="config-row" style="margin:0;">
+            <div class="config-row-info"><h4 style="color:var(--danger);">Reiniciar Fábrica</h4><p>Elimina absolutamente todos los datos del sistema. Esta acción no se puede deshacer.</p></div>
+            <button class="btn btn-danger btn-sm" onclick="reiniciarSistemaCompleto()"><i class="fa fa-triangle-exclamation"></i> Borrar Todo</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="config-panel" id="cfg-pagos" style="display:none;">
+        <h3 style="font-size:15px;font-weight:700;margin-bottom:4px;">Formas de Pago</h3>
+        <p style="font-size:12px;color:var(--text3);margin-bottom:20px;">Elige qué formas de pago quieres que aparezcan al hacer una venta.</p>
+
+        <div class="cfg-pago-card">
+          <div class="cfg-pago-icon" style="--mc:#10b981;--mcbg:rgba(16,185,129,0.14);"><i class="fa fa-money-bill"></i></div>
+          <div class="cfg-pago-info"><h4>Efectivo</h4><p>Siempre está activo. Calcula el vuelto automáticamente.</p></div>
+          <span class="badge badge-green"><i class="fa fa-lock"></i> Siempre activo</span>
+        </div>
+
+        <div class="cfg-pago-card">
+          <div class="cfg-pago-icon" style="--mc:#7c3aed;--mcbg:rgba(124,58,237,0.14);"><i class="fa fa-mobile-screen"></i></div>
+          <div class="cfg-pago-info"><h4>Yape</h4><p>Cobra con Yape y obtén el reporte de ingresos por este medio.</p></div>
+          <label class="toggle"><input type="checkbox" id="cfg-pago-yape" onchange="cfgPagosActualizar()"><span class="toggle-slider"></span></label>
+        </div>
+
+        <div class="cfg-pago-card">
+          <div class="cfg-pago-icon" style="--mc:#0ea5e9;--mcbg:rgba(14,165,233,0.14);"><i class="fa fa-credit-card"></i></div>
+          <div class="cfg-pago-info"><h4>Tarjeta de crédito / débito</h4><p>Registra pagos con tarjeta y obtén el reporte de ingresos del día.</p></div>
+          <label class="toggle"><input type="checkbox" id="cfg-pago-tarjeta" onchange="cfgPagosActualizar()"><span class="toggle-slider"></span></label>
+        </div>
+
+        <div class="cfg-pago-card" id="cfg-pago-mixto-card" style="transition:opacity 0.2s;">
+          <div class="cfg-pago-icon" style="--mc:#f97316;--mcbg:rgba(249,115,22,0.14);"><i class="fa fa-shuffle"></i></div>
+          <div class="cfg-pago-info"><h4>Pagos mixtos</h4><p>Cobra una venta con varias formas de pago, por ejemplo una parte en efectivo y otra con Yape.</p>
+            <small id="cfg-pago-mixto-aviso" style="display:none;color:var(--warning);font-size:11px;margin-top:4px;">Activa Yape o Tarjeta para poder usar pagos mixtos.</small>
+          </div>
+          <label class="toggle"><input type="checkbox" id="cfg-pago-mixto" onchange="cfgPagosActualizar()"><span class="toggle-slider"></span></label>
+        </div>
+
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;margin:16px 0;">
+          <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">Así aparecerá al cobrar</div>
+          <div id="cfg-pagos-preview" class="cfg-pagos-preview"></div>
+        </div>
+
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-primary" onclick="guardarPagos()"><i class="fa fa-floppy-disk"></i> Guardar Formas de Pago</button>
+        </div>
+      </div>
+
+      <div class="config-panel" id="cfg-ticket" style="display:none;">
+        <h3 style="font-size:15px;font-weight:700;margin-bottom:4px;">Ticket de Venta</h3>
+        <div class="tkcfg">
+          <div class="tkcfg-form">
+            <p class="tkcfg-intro">Haz clic sobre el ticket para cambiar el logo y los textos.</p>
+            <div class="tkcfg-cols">
+              <div class="tkcfg-col">
+                <div class="tkcfg-bloque">
+                  <div class="tkcfg-sec"><i class="fa fa-ruler-horizontal"></i> Tamaño del papel</div>
+                  <div class="tk-seg" id="tk-ancho">
+                    <button type="button" class="tk-seg-btn" data-v="58" onclick="tkAncho(this)">58 mm<small>angosto</small></button>
+                    <button type="button" class="tk-seg-btn on" data-v="80" onclick="tkAncho(this)">80 mm<small>estándar</small></button>
+                  </div>
+                </div>
+
+                <div class="tkcfg-bloque">
+                  <div class="tkcfg-sec"><i class="fa fa-font"></i> Letra</div>
+                  <div class="tk-seg" id="tk-fuente">
+                    <button type="button" class="tk-seg-btn on" data-v="jetbrains" onclick="tkFuente(this)">JetBrains</button>
+                    <button type="button" class="tk-seg-btn" data-v="plex" onclick="tkFuente(this)">Plex</button>
+                    <button type="button" class="tk-seg-btn" data-v="courier" onclick="tkFuente(this)">Courier</button>
+                    <button type="button" class="tk-seg-btn" data-v="space" onclick="tkFuente(this)">Space</button>
+                  </div>
+                  <div class="tk-espacios">
+                    <div class="tk-stepper"><label>Tamaño</label>
+                      <div class="tk-stepper-ctl"><button type="button" onclick="tkStep('tk-tam',-1,8,20)">−</button><input type="number" id="tk-tam" min="8" max="20" data-auto="1" oninput="this.dataset.auto='0';tkPreviewActualizar()"><button type="button" onclick="tkStep('tk-tam',1,8,20)">+</button></div></div>
+                    <div class="tk-stepper" id="tk-col-wrap" title="Caracteres por línea al imprimir directo por USB"><label>Columnas</label>
+                      <div class="tk-stepper-ctl"><button type="button" onclick="tkStep('tk-col',-1,24,64)">−</button><input type="number" id="tk-col" min="24" max="64" oninput="tkPreviewActualizar()"><button type="button" onclick="tkStep('tk-col',1,24,64)">+</button></div></div>
+                  </div>
+                  <div class="tk-chips">
+                    <label class="tk-chip"><input type="checkbox" id="tk-totNormal" onchange="tkPreviewActualizar()"><span>Totales normales</span></label><label class="tk-chip"><input type="checkbox" id="tk-negritas" onchange="tkPreviewActualizar()"><span>Todo en negrita</span></label>
+                  </div>
+                </div>
+
+
+                <div class="tkcfg-bloque">
+                  <div class="tkcfg-sec"><i class="fa fa-store"></i> Encabezado</div>
+                  <div class="tk-chips">
+                    <label class="tk-chip"><input type="checkbox" id="tk-logo" onchange="tkPreviewActualizar()"><span>Logo</span></label><label class="tk-chip"><input type="checkbox" id="tk-nombre" onchange="tkPreviewActualizar()"><span>Nombre</span></label><label class="tk-chip"><input type="checkbox" id="tk-dir" onchange="tkPreviewActualizar()"><span>Dirección</span></label><label class="tk-chip"><input type="checkbox" id="tk-contacto" onchange="tkPreviewActualizar()"><span>Teléfono</span></label><span class="tk-break"></span><label class="tk-chip"><input type="checkbox" id="tk-correo" onchange="tkPreviewActualizar()"><span>Correo</span></label><label class="tk-chip"><input type="checkbox" id="tk-rus" onchange="tkPreviewActualizar()"><span>RUS</span></label><label class="tk-chip"><input type="checkbox" id="tk-ruc" onchange="tkPreviewActualizar()"><span>RUC</span></label>
+                  </div>
+                  <div class="tkcfg-nota">Solo para el ticket: no cambia «Datos del Negocio».</div>
+                </div>
+
+                <div class="tkcfg-bloque">
+                  <div class="tkcfg-sec"><i class="fa fa-list-ul"></i> Detalle de la venta</div>
+                  <div class="tk-chips">
+                    <label class="tk-chip"><input type="checkbox" id="tk-numero" onchange="tkPreviewActualizar()"><span>N° de ticket</span></label><label class="tk-chip"><input type="checkbox" id="tk-fecha" onchange="tkPreviewActualizar()"><span>Fecha y hora</span></label><label class="tk-chip"><input type="checkbox" id="tk-cajero" onchange="tkPreviewActualizar()"><span>Cajero</span></label><span class="tk-break"></span><label class="tk-chip"><input type="checkbox" id="tk-cliente" onchange="tkPreviewActualizar()"><span>Cliente</span></label>
+                  </div>
+                </div>
+
+                <div class="tkcfg-acciones">
+                  <button class="btn btn-primary" onclick="guardarTicket()"><i class="fa fa-floppy-disk"></i> Guardar</button>
+                  <button class="btn btn-secondary" onclick="probarTicket()"><i class="fa fa-print"></i> Probar impresión</button>
+                  <button class="btn btn-secondary" onclick="restablecerTicket()"><i class="fa fa-rotate-left"></i> Diseño original</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tkcfg-prev">
+            <input type="file" id="tk-logo-input" hidden accept="image/*" onchange="tkLeerLogo(this)">
+            <div id="tk-preview"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="config-panel" id="cfg-notif" style="display:none;">
+        <h3 style="font-size:15px;font-weight:700;margin-bottom:4px;">Alertas y Notificaciones</h3>
+        <p style="font-size:12px;color:var(--text3);margin-bottom:20px;">Configura cuándo y cómo el sistema te avisa sobre situaciones críticas.</p>
+        
+        <div style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Alertas de Inventario</div>
+        <div class="config-row">
+          <div class="config-row-info"><h4>Alerta Stock Bajo</h4><p>Muestra una notificación cuando un producto tiene poca cantidad</p></div>
+          <label class="toggle"><input type="checkbox" id="cfg-alerta-stock" onchange="toggleAlertaStock(this.checked)"><span class="toggle-slider"></span></label>
+        </div>
+        <div id="cfg-stock-min-wrap" style="transition:all 0.3s;">
+          <div class="form-field" style="margin-left:16px;margin-top:8px;">
+            <label>Avisar cuando el stock sea menor o igual a:</label>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <input type="number" id="cfg-min-stock" min="1" max="100" style="max-width:100px;" oninput="actualizarPreviewAlertaStock(this.value)" onchange="settings.alertas.minStock=parseInt(this.value)||3;localStorage.setItem('bodega_settings',JSON.stringify(settings));updateStockBajoCount();actualizarNotificaciones();">
+              <span id="cfg-stock-min-preview" style="font-size:12px;color:var(--text3);">unidades</span>
+            </div>
+            <small id="cfg-stock-preview-msg" style="font-size:11px;color:var(--warning);display:block;margin-top:4px;"></small>
+          </div>
+        </div>
+
+        <div style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin:16px 0 10px;">Alertas de Deudas</div>
+        <div class="config-row">
+          <div class="config-row-info"><h4>Alerta de Deudas Altas</h4><p>Resalta visualmente cuando un cliente supera el monto de deuda máximo</p></div>
+          <label class="toggle"><input type="checkbox" id="cfg-alerta-deuda" onchange="toggleAlertaDeuda(this.checked)"><span class="toggle-slider"></span></label>
+        </div>
+        <div id="cfg-deuda-wrap" style="transition:all 0.3s;">
+          <div class="form-field" style="margin-left:16px;margin-top:8px;">
+            <label>Monto máximo de deuda permitido (S/.)</label>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <input type="number" id="cfg-monto-deuda" min="1" style="max-width:120px;" oninput="actualizarPreviewAlertaDeuda(this.value)" onchange="const _v=parseFloat(this.value);if(!isNaN(_v)&&_v>0){settings.alertas.montoDeuda=_v;localStorage.setItem('bodega_settings',JSON.stringify(settings));actualizarDeudaAltaCount();renderClients();actualizarNotificaciones();actualizarDashboardReal();}">
+              <span id="cfg-deuda-preview" style="font-size:12px;color:var(--text3);"></span>
+            </div>
+          </div>
+        </div>
+
+        <div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:8px;padding:12px;margin:16px 0;">
+          <div style="font-size:12px;font-weight:600;color:var(--accent);margin-bottom:6px;"><i class="fa fa-circle-info" style="margin-right:6px;"></i>Estado actual de alertas</div>
+          <div id="cfg-alertas-status" style="font-size:12px;color:var(--text2);line-height:1.7;"></div>
+        </div>
+
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-primary" onclick="guardarAlertas()"><i class="fa fa-floppy-disk"></i> Guardar Alertas</button>
+          <button class="btn btn-secondary btn-sm" onclick="probarAlertas()"><i class="fa fa-bell"></i> Probar alertas</button>
+        </div>
+      </div>
+
+      <div class="config-panel" id="cfg-sistema" style="display:none;">
+        <h3 style="font-size:15px;font-weight:700;margin-bottom:4px;">Sistema y Preferencias</h3>
+        <p style="font-size:12px;color:var(--text3);margin-bottom:20px;">Configura el comportamiento general del sistema.</p>
+
+        <div style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Moneda y Formato</div>
+        <div class="form-field">
+          <label>Tipo de Moneda</label>
+          <select id="cfg-moneda" onchange="actualizarPreviewMoneda(this.value)">
+            <option value="S/.">🇵🇪 PEN - Sol Peruano (S/.)</option>
+            <option value="$">🇺🇸 USD - Dólar Americano ($)</option>
+            <option value="€">🇪🇺 EUR - Euro (€)</option>
+            <option value="COP">🇨🇴 COP - Peso Colombiano</option>
+            <option value="MXN">🇲🇽 MXN - Peso Mexicano</option>
+            <option value="ARS">🇦🇷 ARS - Peso Argentino</option>
+          </select>
+          <small id="cfg-moneda-preview" style="font-size:11px;color:var(--text3);display:block;margin-top:4px;"></small>
+        </div>
+
+        <div style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin:16px 0 10px;">Comportamiento del Sistema</div>
+        <div class="config-row">
+          <div class="config-row-info">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+              <input type="checkbox" id="cfg-margen-auto" onchange="toggleMargenAuto(this.checked)" style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;">
+              <span style="font-size:13px;color:var(--text);line-height:1.5;">Calcular automáticamente precio de venta con el margen de ganancia del
+                <span id="cfg-margen-pct-wrap" style="display:inline-flex;align-items:center;gap:2px;transition:opacity 0.2s;">
+                  <input type="number" id="cfg-margen-pct" min="0" step="1" value="20" onchange="settings.sistema.margenPct=parseFloat(this.value)||0;localStorage.setItem('bodega_settings',JSON.stringify(settings));" style="width:56px;padding:3px 4px;text-align:center;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:'Sora',sans-serif;font-size:13px;">%
+                </span>
+                al crear, modificar o ingresar inventario a los productos.</span>
+            </label>
+          </div>
+        </div>
+        <div class="config-row">
+          <div class="config-row-info"><h4>Mensajes Toast (Avisos)</h4><p>Notificaciones emergentes cuando realizas una acción</p></div>
+          <label class="toggle"><input type="checkbox" id="cfg-mostrar-mensajes" onchange="cfgPreviewToast(this.checked)"><span class="toggle-slider"></span></label>
+        </div>
+        <div class="config-row">
+          <div class="config-row-info"><h4>Confirmar al eliminar</h4><p>Muestra un diálogo de confirmación antes de borrar registros</p></div>
+          <label class="toggle"><input type="checkbox" id="cfg-confirm-del"><span class="toggle-slider"></span></label>
+        </div>
+
+        <div style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin:16px 0 10px;">Información del Sistema</div>
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px;font-size:12px;line-height:2;color:var(--text2);">
+          <div style="display:flex;justify-content:space-between;"><span>Versión:</span><span style="color:var(--accent);font-weight:600;">BodegaPOS v1.0</span></div>
+          <div style="display:flex;justify-content:space-between;"><span>Productos registrados:</span><span id="sysInfoProductos" style="font-weight:600;">—</span></div>
+          <div style="display:flex;justify-content:space-between;"><span>Clientes registrados:</span><span id="sysInfoClientes" style="font-weight:600;">—</span></div>
+          <div style="display:flex;justify-content:space-between;"><span>Ventas totales:</span><span id="sysInfoVentas" style="font-weight:600;">—</span></div>
+          <div style="display:flex;justify-content:space-between;"><span>Almacenamiento usado:</span><span id="sysInfoStorage" style="font-weight:600;">—</span></div>
+        </div>
+
+        <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="guardarSistema()"><i class="fa fa-floppy-disk"></i> Guardar Sistema</button>
+          <button class="btn btn-danger btn-sm" onclick="restaurarConfigDefecto()"><i class="fa fa-rotate-left"></i> Restaurar Predeterminados</button>
+        </div>
+      </div>
+
+      <!-- PANEL SUPABASE -->
+      <div class="config-panel" id="cfg-supabase" style="display:none;">
+        <h3 style="font-size:15px;font-weight:700;margin-bottom:4px;">☁️ Sincronización en la Nube</h3>
+        <p style="font-size:12px;color:var(--text3);margin-bottom:20px;">Guarda todos tus datos automáticamente en Supabase. Accede desde cualquier dispositivo.</p>
+        <div id="cfg-supabase-body">
+          <div style="text-align:center;padding:20px;color:var(--text3);font-size:13px;">Cargando...</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

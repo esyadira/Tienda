@@ -1,0 +1,16 @@
+/* ====== PERMISOS CHECKBOXES ====== */
+.perms-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.perm-item{display:flex;align-items:center;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:7px;cursor:pointer;transition:all 0.15s;}
+.perm-item:hover{border-color:var(--accent);}
+.perm-item input[type=checkbox]{accent-color:var(--accent);}
+.perm-item label{font-size:12px;cursor:pointer;}
+
+/* ====== TURNOS ====== */
+.turnos-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+.turno-item{padding:12px;background:var(--surface2);border:2px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:all 0.15s;text-align:center;}
+.turno-item:hover{border-color:var(--accent);}
+.turno-item.selected{border-color:var(--accent);background:rgba(245,158,11,0.1);}
+.turno-item strong{display:block;font-size:13px;margin-bottom:2px;}
+.turno-item small{font-size:11px;color:var(--text3);}
+.turno-item i{font-size:20px;margin-bottom:6px;display:block;}
+

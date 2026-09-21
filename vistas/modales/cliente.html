@@ -1,0 +1,21 @@
+<!-- Modal Cliente -->
+<div class="modal-overlay" id="modalCliente">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalClienteTitle"><i class="fa fa-user-plus" style="color:var(--accent2);margin-right:8px;"></i>Nuevo Cliente</h3>
+      <div class="modal-close" onclick="closeModal('modalCliente')"><i class="fa fa-xmark"></i></div>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editClienteId">
+      <div class="form-row">
+        <div class="form-field"><label>Nombre *</label><input type="text" id="cNombre" placeholder="Nombre"></div>
+        <div class="form-field"><label>Apellido</label><input type="text" id="cApellido" placeholder="Apellido"></div>
+      </div>
+      <div class="form-field"><label>Teléfono</label><input type="text" id="cTel" placeholder="987 654 321"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modalCliente')">Cancelar</button>
+      <button class="btn btn-primary" id="btnGuardarCliente" onclick="saveCliente()"><i class="fa fa-floppy-disk"></i> Guardar Cliente</button>
+    </div>
+  </div>
+</div>

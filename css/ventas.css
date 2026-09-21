@@ -1,0 +1,155 @@
+/* ====== VENTAS / CARRITO ====== */
+/* Layout principal de ventas con altura fija */
+.ventas-layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 16px;
+  /* Calculamos el alto para que ocupe lo que sobra de la pantalla */
+  height: calc(100vh - var(--header-h) - 100px); 
+  overflow: hidden; /* Evita que toda la página baje */
+}
+/* Panel de productos con scroll propio */
+.productos-panel {
+  overflow-y: auto;
+  padding-right: 8px; /* Espacio para que el scroll no tape las tarjetas */
+  height: 100%;
+}
+/* Panel de carrito fijo */
+.carrito-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  height: 100%; /* Ocupa todo el alto del layout */
+  overflow: hidden;
+}
+.carrito-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.carrito-header h3{font-size:15px;font-weight:700;}
+/* El cuerpo del carrito donde están los ítems también debe tener su propio scroll */
+.carrito-items {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0; /* Importante para que el scroll funcione en flexbox */
+}
+.carrito-item{display:flex;align-items:center;gap:10px;padding:10px;background:var(--surface2);border-radius:8px;margin-bottom:6px;border:1px solid var(--border);}
+.ci-img{width:40px;height:40px;border-radius:7px;background:var(--surface3);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.ci-info{flex:1;}
+.ci-info strong{font-size:12px;display:block;}
+.ci-info small{font-size:11px;color:var(--text3);}
+.ci-qty{display:flex;align-items:center;gap:6px;}
+.qty-btn{width:22px;height:22px;border-radius:5px;background:var(--surface3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;color:var(--text2);transition:all 0.15s;}
+.qty-btn:hover{border-color:var(--accent);color:var(--accent);}
+.qty-val{font-size:13px;font-weight:600;min-width:20px;text-align:center;}
+.ci-price{font-size:13px;font-weight:600;color:var(--accent);flex-shrink:0;}
+.ci-del{color:var(--danger);cursor:pointer;font-size:13px;flex-shrink:0;}
+.carrito-footer{padding:14px 16px;border-top:1px solid var(--border);}
+.cart-totals{margin-bottom:12px;}
+.cart-row{display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;color:var(--text2);}
+.cart-row.total{font-size:17px;font-weight:700;color:var(--text);border-top:1px solid var(--border);padding-top:8px;margin-top:8px;}
+.cart-client-field{margin-bottom:10px;}
+.cart-client-field select{width:100%;padding:9px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Sora',sans-serif;font-size:13px;}
+.cart-client-field select:focus{outline:none;border-color:var(--accent);}
+.pay-methods {
+  display: grid;
+  /* Cambiamos a 2 columnas iguales */
+  grid-template-columns: 1fr 1fr; 
+  gap: 10px;
+  margin-bottom: 12px;
+  /* Centramos el bloque completo dentro del panel */
+  justify-content: center; 
+  /* Limitamos el ancho para que no se estiren demasiado */
+  max-width: 100%; 
+}
+
+.pay-method {
+  padding: 10px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s;
+  /* Asegura que el contenido interno (iconos/texto) esté centrado */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.pay-method:hover,.pay-method.selected{border-color:var(--accent);background:rgba(245,158,11,0.08);}
+
+/* ====== BARRA DE ACCIONES RÁPIDAS DEL POS ====== */
+.pos-acciones{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(120px,1fr));
+  gap:8px;
+  margin-bottom:12px;
+}
+.pos-accion-btn{
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  padding:10px 8px;
+  background:var(--pcbg, var(--surface2));
+  border:1px solid var(--border);
+  border-radius:8px;
+  cursor:pointer;
+  text-align:center;
+  transition:all 0.15s;
+}
+.pos-accion-btn:hover{border-color:var(--pc, var(--accent));transform:translateY(-1px);}
+.pos-accion-btn i{font-size:16px;color:var(--pc, var(--accent));}
+.pos-accion-btn span{font-size:11px;font-weight:700;color:var(--text);line-height:1.2;}
+.pos-accion-btn.activo{border-color:var(--pc, var(--accent));background:var(--pc, var(--accent));}
+.pos-accion-btn.activo i,.pos-accion-btn.activo span:not(.pos-accion-badge){color:#000;}
+.pos-accion-badge{
+  position:absolute;top:-6px;right:-6px;
+  min-width:18px;height:18px;padding:0 4px;
+  background:var(--danger);color:#fff;
+  border-radius:20px;font-size:10px;font-weight:800;
+  display:flex;align-items:center;justify-content:center;
+}
+@media (max-width:900px){
+  .pos-acciones{grid-template-columns:repeat(auto-fill,minmax(90px,1fr));}
+  .pos-accion-btn span{font-size:10px;}
+}
+.pay-method i{font-size:16px;display:block;margin-bottom:3px;color:var(--text3);}
+.pay-method.selected i{color:var(--accent);}
+.pay-method span{font-size:10px;color:var(--text3);}
+.btn-cobrar{width:100%;padding:13px;background:linear-gradient(135deg,var(--accent3),#059669);border:none;border-radius:var(--radius-sm);color:#fff;font-family:'Sora',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.2s;}
+.btn-cobrar:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(16,185,129,0.35);}
+
+.client-selected-info {
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px border var(--accent2);
+    padding: 12px;
+    border-radius: 8px;
+    margin-top: 8px;
+    /* Aseguramos que el display predeterminado sea ninguno */
+    display: none; 
+}
+
+
+/* ====== MÉTODO DE PAGO EN EL COBRO ====== */
+.kbd{display:inline-flex;align-items:center;justify-content:center;min-width:22px;padding:2px 6px;font-size:10px;font-weight:800;border-radius:5px;background:rgba(0,0,0,0.18);border:1px solid rgba(255,255,255,0.15);margin-right:2px;}
+.btn-secondary .kbd{background:var(--surface);border-color:var(--border);color:var(--text2);}
+.cobro-metodos{display:grid;grid-template-columns:repeat(auto-fit,minmax(70px,1fr));gap:6px;margin-bottom:16px;}
+.cobro-metodo{display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 4px;background:var(--surface2);
+  border:1.5px solid var(--border);border-radius:8px;cursor:pointer;font-family:'Sora',sans-serif;color:var(--text3);transition:all 0.15s;}
+.cobro-metodo i{font-size:15px;}
+.cobro-metodo span{font-size:11px;font-weight:700;}
+.cobro-metodo:hover{border-color:var(--mc);}
+.cobro-metodo.selected{border-color:var(--mc);background:var(--mcbg);color:var(--mc);}
+.mixto-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.mixto-lbl{width:88px;flex-shrink:0;font-size:12px;font-weight:700;color:var(--mc);}
+.mixto-lbl i{margin-right:4px;}
+.mixto-row input{flex:1;min-width:0;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);
+  color:var(--text);font-family:'Sora',sans-serif;font-size:15px;font-weight:700;text-align:right;}
+.mixto-row input:focus{outline:none;border-color:var(--mc);}
+.mixto-resto{background:none;border:1px solid var(--border);border-radius:6px;padding:6px 8px;cursor:pointer;font-family:'Sora',sans-serif;
+  font-size:11px;font-weight:600;color:var(--text3);}
+.mixto-resto:hover{color:var(--mc);border-color:var(--mc);}

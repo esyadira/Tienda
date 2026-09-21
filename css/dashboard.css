@@ -1,0 +1,119 @@
+/* ====== DASHBOARD CHARTS ====== */
+.chart-area{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;}
+.chart-title{font-size:14px;font-weight:600;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.chart-title i{color:var(--accent);}
+.mini-chart{height:120px;display:flex;align-items:flex-end;gap:8px;padding:0 4px;}
+.bar{flex:1;border-radius:4px 4px 0 0;background:linear-gradient(to top,var(--accent),rgba(245,158,11,0.4));min-width:0;transition:all 0.3s;cursor:pointer;position:relative;}
+.bar:hover{filter:brightness(1.2);}
+.bar-label{position:absolute;bottom:-20px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--text3);white-space:nowrap;}
+.chart-grid{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:24px;}
+.donut-wrap{display:flex;align-items:center;gap:20px;}
+.donut-legend{flex:1;}
+.donut-legend-item{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:12px;}
+.donut-dot{width:10px;height:10px;border-radius:50%;}
+.recent-sales{margin-top:0;}
+.rs-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(42,58,82,0.5);}
+.rs-item:last-child{border:none;}
+.rs-avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--accent2),#7c3aed);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;}
+.rs-info{flex:1;}
+.rs-info strong{font-size:12px;display:block;}
+.rs-info small{font-size:11px;color:var(--text3);}
+.rs-amount{font-size:14px;font-weight:700;color:var(--accent3);}
+
+/* ====== DASHBOARD COLORES DISTINTOS ====== */
+/* Stat cards con colores individuales */
+.stats-grid .stat-card:nth-child(1) {
+  --glow: rgba(245,158,11,0.06);
+  --icon-bg: rgba(245,158,11,0.14);
+  --icon-c: #f59e0b;
+  border-top: 3px solid #f59e0b;
+}
+.stats-grid .stat-card:nth-child(1) .stat-value { color: #f59e0b; }
+
+.stats-grid .stat-card:nth-child(2) {
+  --glow: rgba(59,130,246,0.06);
+  --icon-bg: rgba(59,130,246,0.14);
+  --icon-c: #3b82f6;
+  border-top: 3px solid #3b82f6;
+}
+.stats-grid .stat-card:nth-child(2) .stat-value { color: #3b82f6; }
+
+.stats-grid .stat-card:nth-child(3) {
+  --glow: rgba(239,68,68,0.06);
+  --icon-bg: rgba(239,68,68,0.14);
+  --icon-c: #ef4444;
+  border-top: 3px solid #ef4444;
+}
+.stats-grid .stat-card:nth-child(3) .stat-value { color: #ef4444; }
+
+.stats-grid .stat-card:nth-child(4) {
+  --glow: rgba(168,85,247,0.06);
+  --icon-bg: rgba(168,85,247,0.14);
+  --icon-c: #a855f7;
+  border-top: 3px solid #a855f7;
+}
+.stats-grid .stat-card:nth-child(4) .stat-value { color: #a855f7; }
+
+/* Chart areas con bordes de color distintos */
+.dashboard-chart-grid .chart-area:nth-child(1) {
+  border-top: 3px solid #f59e0b;
+}
+.dashboard-chart-grid .chart-area:nth-child(2) {
+  border-top: 3px solid #a855f7;
+}
+.dashboard-chart-grid .chart-area:nth-child(3) {
+  border-top: 3px solid #10b981;
+}
+/* Recent sales card */
+.recent-sales-scroll .card {
+  border-top: 3px solid #3b82f6;
+}
+
+/* Estilos para el dashboard fijo */
+.dashboard-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.stats-grid-fixed {
+  flex-shrink: 0;
+  margin-bottom: 16px;
+}
+
+.charts-fixed {
+  flex-shrink: 0;
+  margin-bottom: 16px;
+}
+
+.recent-sales-scroll {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.recent-sales-scroll .card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.recent-sales-scroll .chart-title {
+  flex-shrink: 0;
+}
+
+.recent-sales-scroll .recent-sales-list {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  padding-right: 8px;
+}
+
+/* Dashboard chart grid - 3 columns by default */
+.dashboard-chart-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 0.9fr 0.9fr;
+  gap: 16px;
+}
+

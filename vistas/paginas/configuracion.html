@@ -1,0 +1,79 @@
+      <!-- ===== CONFIGURACION ===== -->
+      <div class="page" id="page-configuracion">
+  <div class="page-header">
+    <div class="page-title"><h1>Configuración</h1><p>Ajustes globales del sistema</p></div>
+  </div>
+  <div class="config-sections">
+
+    <!-- ===== INICIO DE CONFIGURACIÓN ===== -->
+    <div id="cfgHub">
+      <div class="cfg-seccion">
+        <div class="cfg-sec-title">General</div>
+        <div class="cfg-grid">
+        <div class="cfg-tile" style="--tc:#f59e0b;--tcbg:rgba(245,158,11,0.14);" onclick="abrirConfig(this,'cfg-negocio')">
+          <div class="cfg-tile-icon"><i class="fa fa-store"></i></div>
+          <div class="cfg-tile-label">Datos del Negocio</div>
+          <div class="cfg-tile-desc">Nombre, contacto y logo</div>
+        </div>
+        <div class="cfg-tile" style="--tc:#3b82f6;--tcbg:rgba(59,130,246,0.14);" onclick="showPage('vendedores')">
+          <div class="cfg-tile-icon"><i class="fa fa-user-group"></i></div>
+          <div class="cfg-tile-label">Usuarios</div>
+          <div class="cfg-tile-desc">Cajeros y permisos</div>
+        </div>
+        <div class="cfg-tile" style="--tc:#10b981;--tcbg:rgba(16,185,129,0.14);" onclick="abrirModalCajaInicial()">
+          <div class="cfg-tile-icon"><i class="fa fa-wallet"></i></div>
+          <div class="cfg-tile-label">Cajas de hoy</div>
+          <div class="cfg-tile-desc">Efectivo con el que iniciaron</div>
+        </div>
+        </div>
+      </div>
+
+      <div class="cfg-seccion">
+        <div class="cfg-sec-title">Personalización</div>
+        <div class="cfg-grid">
+        <div class="cfg-tile" style="--tc:#8b5cf6;--tcbg:rgba(139,92,246,0.14);" onclick="abrirConfig(this,'cfg-apariencia')">
+          <div class="cfg-tile-icon"><i class="fa fa-palette"></i></div>
+          <div class="cfg-tile-label">Apariencia</div>
+          <div class="cfg-tile-desc">Modo oscuro y color</div>
+        </div>
+        <div class="cfg-tile" style="--tc:#06b6d4;--tcbg:rgba(6,182,212,0.14);" onclick="abrirConfig(this,'cfg-sistema')">
+          <div class="cfg-tile-icon"><i class="fa fa-sliders"></i></div>
+          <div class="cfg-tile-label">Preferencias</div>
+          <div class="cfg-tile-desc">Moneda, ticket y avisos</div>
+        </div>
+        <div class="cfg-tile" style="--tc:#10b981;--tcbg:rgba(16,185,129,0.14);" onclick="abrirConfig(this,'cfg-pagos')">
+          <div class="cfg-tile-icon"><i class="fa fa-credit-card"></i></div>
+          <div class="cfg-tile-label">Formas de Pago</div>
+          <div class="cfg-tile-desc">Qué métodos aparecen al cobrar</div>
+        </div>
+        <div class="cfg-tile" style="--tc:#ec4899;--tcbg:rgba(236,72,153,0.14);" onclick="abrirConfig(this,'cfg-ticket')">
+          <div class="cfg-tile-icon"><i class="fa fa-receipt"></i></div>
+          <div class="cfg-tile-label">Ticket</div>
+          <div class="cfg-tile-desc">Diseño e impresión del ticket</div>
+        </div>
+        <div class="cfg-tile" style="--tc:#f97316;--tcbg:rgba(249,115,22,0.14);" onclick="abrirConfig(this,'cfg-notif')">
+          <div class="cfg-tile-icon"><i class="fa fa-bell"></i></div>
+          <div class="cfg-tile-label">Alertas</div>
+          <div class="cfg-tile-desc">Stock bajo y deudas altas</div>
+        </div>
+        </div>
+      </div>
+
+      <div class="cfg-seccion">
+        <div class="cfg-sec-title">Mantenimiento</div>
+        <div class="cfg-grid">
+        <div class="cfg-tile" style="--tc:#64748b;--tcbg:rgba(100,116,139,0.16);" onclick="abrirConfig(this,'cfg-backup')">
+          <div class="cfg-tile-icon"><i class="fa fa-database"></i></div>
+          <div class="cfg-tile-label">Respaldo y Datos</div>
+          <div class="cfg-tile-desc">Copia de seguridad y reinicio</div>
+        </div>
+        <div class="cfg-tile" style="--tc:#0ea5e9;--tcbg:rgba(14,165,233,0.14);" onclick="abrirConfig(this,'cfg-supabase',sbRenderCfgPanel)">
+          <div class="cfg-tile-icon"><i class="fa fa-cloud"></i></div>
+          <div class="cfg-tile-label">Nube</div>
+          <div class="cfg-tile-desc">Sincronización con Supabase</div>
+        </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

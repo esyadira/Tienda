@@ -1,0 +1,325 @@
+/* ====== RESPONSIVE SYSTEM ====== */
+
+/* --- Laptop/Medium screens (1024px - 1366px) --- */
+@media (max-width: 1366px) {
+  :root {
+    --sidebar-w: 210px;
+  }
+  .ventas-layout {
+    grid-template-columns: 1fr 300px;
+    height: calc(100vh - var(--header-h) - 80px);
+  }
+  .dashboard-chart-grid {
+    grid-template-columns: 1.2fr 1fr 1fr !important;
+  }
+  .stat-value { font-size: 22px; }
+  .header-time { display: none; }
+}
+
+/* --- Small laptop (< 1200px) --- */
+@media (max-width: 1200px) {
+  :root {
+    --sidebar-w: 190px;
+  }
+  .ventas-layout {
+    grid-template-columns: 1fr 280px;
+  }
+  .dashboard-chart-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 12px !important;
+  }
+  /* Hide the 3rd chart column on small laptops */
+  .dashboard-chart-grid > div:nth-child(3) {
+    display: none;
+  }
+  .config-sections {
+    grid-template-columns: 170px 1fr;
+  }
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* --- Tablet / very small laptop (< 1024px) --- */
+@media (max-width: 1024px) {
+  :root {
+    --sidebar-w: 0px;
+    --header-h: 56px;
+  }
+
+  /* Permitir scroll vertical en todo */
+  html, body { overflow: hidden; }
+
+  /* Sidebar: drawer deslizable */
+  .sidebar {
+    position: fixed;
+    left: -260px;
+    top: 0; bottom: 0;
+    width: 240px !important;
+    z-index: 900;
+    transition: left 0.25s cubic-bezier(0.16,1,0.3,1);
+    box-shadow: none;
+    overflow-y: auto;
+  }
+  .sidebar.open {
+    left: 0;
+    box-shadow: 4px 0 32px rgba(0,0,0,0.5);
+  }
+  /* collapsed no aplica en tablet - siempre usa drawer */
+  .sidebar.collapsed {
+    width: 240px !important;
+    left: -260px;
+    padding: 12px 0;
+    overflow-y: auto;
+    border-right: 1px solid var(--border);
+  }
+  /* Abierto gana siempre sobre collapsed (antes quedaba oculto con el fondo oscuro) */
+  .sidebar.open,
+  .sidebar.collapsed.open {
+    left: 0;
+    box-shadow: 4px 0 32px rgba(0,0,0,0.5);
+  }
+  .sidebar-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 899;
+    backdrop-filter: blur(2px);
+  }
+  .sidebar-backdrop.show { display: block; }
+
+  /* App body y main: scroll libre */
+  .app-body { flex: 1; overflow: hidden; }
+  .main {
+    padding: 16px;
+    overflow-y: auto !important;
+    height: calc(100vh - var(--header-h));
+  }
+
+  /* Todas las páginas: altura libre, scroll natural */
+  .page.active,
+  #page-productos.active,
+  #page-categorias.active,
+  #page-clientes.active,
+  #page-vendedores.active,
+  #page-compras.active,
+  #page-reportes.active,
+  #page-dashboard.active {
+    height: auto !important;
+    min-height: unset !important;
+    overflow: visible !important;
+    display: block !important;
+  }
+
+  /* Todas las páginas: anular alturas fijas inline */
+  #page-dashboard,
+  #page-productos,
+  #page-categorias,
+  #page-ventas,
+  #page-clientes,
+  #page-compras,
+  #page-vendedores,
+  #page-reportes {
+    height: auto !important;
+    min-height: unset !important;
+    overflow: visible !important;
+  }
+
+  /* Ventas POS: columna única, carrito abajo, scroll libre */
+  #page-ventas.active {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  .ventas-layout {
+    display: flex !important;
+    flex-direction: column !important;
+    height: auto !important;
+    overflow: visible !important;
+    gap: 12px;
+  }
+  #page-ventas.active .ventas-layout { flex: unset !important; min-height: unset !important; }
+
+  /* Productos panel: altura fija con scroll */
+  .productos-panel {
+    height: 55vh;
+    min-height: 300px;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+
+  /* Carrito: altura automática, muestra todo */
+  .carrito-panel {
+    height: auto !important;
+    overflow: visible !important;
+    min-height: unset;
+  }
+  .carrito-panel .carrito-items {
+    max-height: 160px;
+    overflow-y: auto;
+  }
+  .carrito-panel .carrito-footer {
+    overflow: visible !important;
+  }
+
+  /* Tablas con scroll propio */
+  .table-wrap,
+  .table-wrap[style],
+  #page-productos .table-wrap,
+  #page-clientes .table-wrap,
+  #page-vendedores .table-wrap,
+  #page-categorias .table-wrap {
+    height: auto !important;
+    overflow: visible !important;
+    min-height: unset !important;
+    flex: unset !important;
+  }
+  .table-wrap > div[style*="overflow-y"],
+  .table-wrap > div {
+    height: auto !important;
+    overflow: visible !important;
+    max-height: unset !important;
+  }
+  #prodListView, #prodGridView,
+  #catTable, #clientTable,
+  #vendTable {
+    height: auto !important;
+    overflow: visible !important;
+    max-height: unset !important;
+  }
+
+  /* Reportes: scroll libre */
+  #page-reportes .rep-panel {
+    flex: unset !important;
+    min-height: unset !important;
+    overflow: visible !important;
+  }
+  #page-reportes .table-wrap {
+    flex: unset !important;
+    min-height: unset !important;
+  }
+  #page-reportes .table-wrap > div[style*="overflow-y"] {
+    flex: unset !important;
+    min-height: unset !important;
+    max-height: unset !important;
+  }
+
+  /* Dashboard */
+  .dashboard-container { height: auto !important; overflow: visible !important; }
+  .recent-sales-scroll { flex: unset; overflow: visible !important; height: auto !important; }
+  .dashboard-chart-grid { grid-template-columns: 1fr !important; }
+  .dashboard-chart-grid > div:nth-child(3) { display: block; }
+
+  /* Header */
+  .header-brand { width: auto; padding: 0 12px; }
+  .header-time { display: none; }
+
+  /* General */
+  .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .config-sections { grid-template-columns: 1fr; }
+  .config-nav { display: flex; flex-wrap: wrap; gap: 4px; height: auto; }
+  .config-nav-item { flex: 1; min-width: 120px; justify-content: center; text-align: center; }
+  .form-row { grid-template-columns: 1fr; }
+  .page-header { flex-wrap: wrap; gap: 10px; }
+  .table-toolbar { flex-wrap: wrap; gap: 8px; }
+  .table-search { max-width: 100%; flex: 1 1 160px; }
+  .prov-grid { gap: 15px; }
+  .prov-card { width: 100%; }
+  .report-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+}
+
+/* --- Mobile (< 640px) --- */
+@media (max-width: 640px) {
+  :root { --header-h: 52px; }
+
+  /* Restore body scroll on mobile */
+  html, body { overflow: auto !important; }
+
+  /* Main scrollable on mobile */
+  .main { padding: 12px; overflow-y: auto !important; }
+
+  /* All pages: free height, let content scroll naturally */
+  .page, .page.active,
+  #page-dashboard, #page-productos.active,
+  #page-categorias.active, #page-clientes.active,
+  #page-vendedores.active, #page-compras.active {
+    height: auto !important;
+    overflow: visible !important;
+    min-height: unset !important;
+  }
+
+  /* Dashboard: free scroll */
+  #page-dashboard { height: auto !important; overflow: visible !important; }
+  .dashboard-container { height: auto !important; overflow: visible !important; }
+  .recent-sales-scroll { flex: unset; overflow: visible !important; height: auto !important; min-height: unset !important; }
+
+  /* Stats grid 2 columns */
+  .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .stat-value { font-size: 20px; }
+  .stat-card { padding: 14px; }
+  .dashboard-chart-grid { grid-template-columns: 1fr !important; gap: 12px; }
+
+  /* table-wrap: free on mobile */
+  .table-wrap { overflow: visible !important; height: auto !important; min-height: unset !important; }
+  .table-wrap > div { overflow: visible !important; height: auto !important; min-height: unset !important; }
+  #prodListView, #prodGridView { overflow: visible !important; height: auto !important; }
+  #catTable, #clientTable, #vendTable { overflow: visible !important; }
+
+  /* Compras: el panel crece con su contenido y no recorta su lista */
+  .cp-panel { overflow: visible !important; flex: unset !important; height: auto !important; }
+  .cp-body { overflow-x: auto !important; flex: unset !important; height: auto !important; }
+
+  /* table: horizontal scroll */
+  .table-wrap { overflow-x: auto !important; }
+  #prodListView, #catTable, #clientTable, #vendTable {
+    overflow-x: auto !important;
+    display: block;
+  }
+
+  /* Ventas POS: stack vertically, no fixed height */
+  .ventas-layout {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: auto auto !important;
+    height: auto !important;
+    overflow: visible !important;
+    gap: 12px;
+  }
+  .carrito-panel { height: auto !important; min-height: 280px; }
+  .productos-panel { height: auto !important; overflow-y: visible !important; }
+
+  /* Page headers */
+  .page-header { flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+  .page-header > div:last-child { width: 100%; justify-content: flex-end; }
+  .page-title h1 { font-size: 18px; }
+
+  /* Toolbars */
+  .table-toolbar { flex-wrap: wrap; gap: 8px; padding: 10px 12px; }
+  .table-search { max-width: 100%; flex: 1 1 160px; min-width: 0; }
+
+  /* Modals */
+  .modal { max-height: 95vh; }
+  .modal-lg { max-width: 98vw !important; }
+
+  /* Prov grid: 1 column */
+  .prov-grid { grid-template-columns: 1fr !important; gap: 12px; }
+  .prov-card { width: 100%; }
+
+  /* Config */
+  .config-sections { grid-template-columns: 1fr; }
+  .config-nav { display: flex; flex-wrap: wrap; gap: 4px; height: auto; }
+  .config-nav-item { flex: 1; min-width: 120px; justify-content: center; text-align: center; }
+
+  /* Forms */
+  .form-row { grid-template-columns: 1fr; }
+
+  /* Header */
+  .header-search { display: none; }
+  .user-chip-info { display: none; }
+
+  /* Reports */
+  .report-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+
+  /* Login */
+  .login-card { width: 95vw; padding: 32px 24px; }
+}

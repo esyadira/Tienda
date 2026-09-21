@@ -1,0 +1,25 @@
+      <!-- ===== CLIENTES ===== -->
+      <div class="page" id="page-clientes" style="height:calc(100vh - var(--header-h) - 48px); overflow:hidden;">
+        <div class="page-header" style="flex-shrink:0;">
+          <div class="page-title"><h1>Clientes</h1><p>Gestión de clientes y créditos</p></div>
+          <button class="btn btn-primary" onclick="openNuevoCliente()"><i class="fa fa-user-plus"></i> Nuevo Cliente</button>
+        </div>
+        <div class="table-wrap" style="flex:1; overflow:hidden; display:flex; flex-direction:column; min-height:0;">
+          <div class="table-toolbar" style="flex-shrink:0;">
+            <div class="table-search"><i class="fa fa-magnifying-glass"></i><input type="text" id="clientSearchBox" placeholder="Buscar cliente..." oninput="filterClients()"></div>
+            <select class="btn btn-secondary btn-sm" id="clientFilterDeuda" style="border:1px solid var(--border);background:var(--surface2);color:var(--text);font-family:'Sora',sans-serif;padding:7px 12px;border-radius:7px;cursor:pointer;" onchange="filterClients()">
+              <option value="">Todos</option><option value="deuda">Con deuda</option><option value="sindeuda">Sin deuda</option>
+            </select>
+            <button class="btn btn-secondary btn-sm" onclick="clearClientFilter()"><i class="fa fa-broom"></i> Limpiar</button>
+            <span id="clientContador" style="margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:11px;background:rgba(245,158,11,0.1);color:var(--accent);padding:2px 8px;border-radius:20px;font-weight:700;"></span>
+          </div>
+          <div style="flex:1; overflow-y:auto; min-height:0;">
+            <table id="clientTable" style="width:100%;border-collapse:collapse;">
+              <thead style="position:sticky;top:0;z-index:10;background:var(--surface2);">
+                <tr><th>Cliente</th><th>Teléfono</th><th>Deuda</th><th>Envases</th><th>Última compra</th><th>Estado</th><th>Acciones</th></tr>
+              </thead>
+              <tbody id="clientTbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>

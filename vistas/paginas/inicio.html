@@ -1,0 +1,142 @@
+      <!-- ===== DASHBOARD ===== -->
+      <div class="page active" id="page-dashboard" style="height: 100%; overflow: hidden;">
+  <div class="dashboard-container" style="height: 100%; display: flex; flex-direction: column; overflow: hidden;">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-card-inner">
+              <div class="stat-icon"><i class="fa fa-sack-dollar"></i></div>
+              <div class="stat-card-text">
+                <div class="stat-label">Ventas Hoy</div>
+                <div class="stat-value" id="dashVentasHoy">S/. 0.00</div>
+              </div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-inner">
+              <div class="stat-icon"><i class="fa fa-receipt"></i></div>
+              <div class="stat-card-text">
+                <div class="stat-label">Transacciones</div>
+                <div class="stat-value" id="dashTransacciones">0</div>
+              </div>
+            </div>
+          </div>
+          <div class="stat-card" onclick="abrirModalStockBajo()" style="cursor:pointer;">
+            <div class="stat-card-inner">
+              <div class="stat-icon"><i class="fa fa-triangle-exclamation"></i></div>
+              <div class="stat-card-text">
+                <div class="stat-label">Stock Bajo</div>
+                <div class="stat-value" id="stockBajoCount">0</div>
+              </div>
+            </div>
+          </div>
+
+<div class="stat-card" onclick="abrirModalDeudaAlta()" style="cursor:pointer;">
+  <div class="stat-card-inner">
+    <div class="stat-icon"><i class="fa fa-hand-holding-dollar"></i></div>
+    <div class="stat-card-text">
+      <div class="stat-label">Deuda Alta</div>
+      <div class="stat-value" id="deudaAltaCount">0</div>
+    </div>
+  </div>
+</div>
+
+<div class="stat-card" onclick="abrirModalCajaInicial()" style="cursor:pointer;">
+  <div class="stat-card-inner">
+    <div class="stat-icon"><i class="fa fa-wallet"></i></div>
+    <div class="stat-card-text">
+      <div class="stat-label">Efectivo Inicial</div>
+      <div class="stat-value" id="dashCajaInicial">S/. 0.00</div>
+    </div>
+  </div>
+</div>
+        </div>
+
+        <!-- Modal Stock Bajo (Flotante) -->
+<div class="modal-overlay" id="modalStockBajo">
+  <div class="modal modal-lg" style="display: flex; flex-direction: column; max-height: 85vh;">
+    <div class="modal-header">
+      <h3><i class="fa fa-triangle-exclamation" style="color:var(--danger);margin-right:8px;"></i>Productos con Stock Bajo</h3>
+      <div class="modal-close" onclick="closeModal('modalStockBajo')"><i class="fa fa-xmark"></i></div>
+    </div>
+    <div class="modal-body" style="padding: 20px; overflow: visible;">
+      <!-- Contenedor fijo para el encabezado de la tabla (botones y total) -->
+      <div id="stockBajoHeader" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-shrink: 0;">
+        <!-- El contenido se llena dinámicamente -->
+      </div>
+      <!-- Contenedor con scroll SOLO para la tabla -->
+      <div id="stockBajoTableWrapper" style="overflow-y: auto; max-height: 50vh;">
+        <!-- La tabla va aquí -->
+      </div>
+      <div id="stockBajoFooter" style="margin-top: 16px; padding: 12px; background: rgba(239, 68, 68, 0.08); border-radius: 8px; text-align: center; flex-shrink: 0;">
+        <!-- El mensaje de advertencia va aquí -->
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modalStockBajo')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Deuda Alta (Flotante) -->
+<div class="modal-overlay" id="modalDeudaAlta">
+  <div class="modal modal-lg" style="display: flex; flex-direction: column; max-height: 85vh;">
+    <div class="modal-header">
+      <h3><i class="fa fa-exclamation-triangle" style="color:var(--danger);margin-right:8px;"></i>Clientes con Deuda Alta</h3>
+      <div class="modal-close" onclick="closeModal('modalDeudaAlta')"><i class="fa fa-xmark"></i></div>
+    </div>
+    <div class="modal-body" style="padding: 20px; overflow: visible;">
+      <div id="deudaAltaHeader" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-shrink: 0;"></div>
+      <div id="deudaAltaTableWrapper" style="overflow-y: auto; max-height: 50vh;"></div>
+      <div id="deudaAltaFooter" style="margin-top: 16px; padding: 12px; background: rgba(239, 68, 68, 0.08); border-radius: 8px; text-align: center; flex-shrink: 0;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modalDeudaAlta')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+        <div class="chart-grid dashboard-chart-grid" style="margin-bottom: 16px;">
+  
+  <div class="chart-area" style="padding: 16px;">
+    <div class="chart-title" style="display:flex; justify-content:space-between; align-items:center;">
+      <span><i class="fa fa-chart-line"></i> Ventas</span>
+      <select id="salesPeriodFilter" class="btn btn-secondary btn-sm" onchange="renderSalesChart()" style="padding:2px 6px; font-size:10px;">
+        <option value="week">Semana</option>
+        <option value="month">Año</option>
+        <option value="years">Anual</option>
+      </select>
+    </div>
+    <div class="mini-chart" id="salesChart" style="height:140px; align-items: flex-end;"></div>
+    <div id="salesChartLabels" style="display:flex; justify-content:space-around; margin-top:8px;"></div>
+  </div>
+
+  <div class="chart-area" style="padding: 16px; display: flex; flex-direction: column; align-items: center;">
+  <div class="chart-title" style="align-self: flex-start;"><i class="fa fa-chart-pie"></i> Categorías</div>
+  
+  <div class="donut-wrap" style="display: flex; align-items: center; justify-content: center; gap: 30px; flex: 1; width: 10%;">
+    <div id="donutContainer" style="position: relative; width: 130px; height: 140px; flex-shrink: 0;">
+      <svg width="140" height="140" viewBox="0 0 100 100" id="donutSvg"></svg>
+    </div>
+    <div class="donut-legend" id="donutLegend" style="display: flex; flex-direction: column; gap: 8px;"></div>
+  </div>
+</div>
+
+  <div class="chart-area" style="padding: 16px;">
+    <div class="chart-title"><i class="fa fa-crown" style="color:var(--accent);"></i> Top</div>
+    <div id="topProductsList" style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px;">
+      </div>
+  </div>
+  
+</div>
+        <!-- Ventas Recientes - Scrollable -->
+    <div class="recent-sales-scroll" style="flex: 1; min-height: 0;">
+      <div class="card" style="height: 100%; display: flex; flex-direction: column; padding: 0; overflow: hidden;">
+        <div class="chart-title" style="padding: 12px 16px 8px 16px; flex-shrink: 0;"><i class="fa fa-clock-rotate-left"></i> Ventas Recientes</div>
+        <div class="recent-sales-list" id="recentSalesList" style="flex: 1; overflow-y: auto; padding: 0 12px 12px 12px;">
+          <!-- Aquí se cargarán dinámicamente las ventas recientes -->
+        </div>
+      </div>
+    </div>
+    
+  </div>
+</div>

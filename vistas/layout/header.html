@@ -1,0 +1,46 @@
+ <header class="header">
+  <div class="sidebar-toggle" onclick="toggleSidebar()" title="Menú">
+    <i class="fa fa-bars" id="sidebarToggleIcon"></i>
+  </div>
+  <div class="header-brand">
+    <div class="header-brand-icon" id="header-logo-container">🏪</div>
+    <div>
+      <h2 id="header-nombre-negocio">BodegaPOS</h2>
+      <small id="header-subtitulo-negocio" style="display:none;">v2.0 Pro</small>
+    </div>
+  </div>
+
+  <div class="header-right">
+    <div class="header-time" id="headerClockWrap">
+      <div class="header-time-dot"></div>
+      <span class="header-time-text" id="headerClock">00:00</span>
+      <span class="header-time-date" id="headerDate">—</span>
+    </div>
+
+    <div style="position:relative;">
+      <div class="notif-btn" onclick="toggleNotif()">
+        <i class="fa fa-bell"></i>
+        <span class="notif-badge" id="notifCount" style="display:none;">0</span>
+      </div>
+      <div class="notif-panel" id="notifPanel">
+        <div class="notif-header">
+          <h4>Notificaciones</h4>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span id="notifHeaderCount">0 nuevas</span>
+            <button id="notifMarkAllBtn" onclick="marcarTodasLeidas()" style="display:none;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.3);color:var(--accent);font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;cursor:pointer;font-family:'Sora',sans-serif;white-space:nowrap;">✓ Marcar leídas</button>
+          </div>
+        </div>
+        <div id="notifList"></div>
+      </div>
+    </div>
+
+    <div class="user-chip" id="userChip">
+      <div class="user-avatar" id="userAvatarHdr">AD</div>
+      <div class="user-chip-info">
+        <strong id="userName">Administrador</strong>
+        <span class="user-chip-sep"></span>
+        <small id="userRole">Admin</small>
+      </div>
+    </div>
+  </div>
+</header>

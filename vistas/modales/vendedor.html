@@ -1,0 +1,68 @@
+<!-- Modal Vendedor -->
+<div class="modal-overlay" id="modalVendedor">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h3><i class="fa fa-id-badge" style="color:#a855f7;margin-right:8px;"></i><span id="modalVendedorTitle">Nuevo Vendedor</span></h3>
+      <div class="modal-close" onclick="closeModal('modalVendedor');resetModalVendedorFooter();"><i class="fa fa-xmark"></i></div>
+    </div>
+    <div class="modal-body">
+
+      <!-- Foto + datos básicos lado a lado -->
+      <div style="display:flex;gap:20px;align-items:flex-start;margin-bottom:16px;">
+        <!-- Foto -->
+        <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:8px;">
+          <div id="vFotoPreview" onclick="document.getElementById('vFotoInput').click()"
+            style="width:88px;height:88px;border-radius:50%;border:2px dashed var(--border);background:var(--surface2);
+                   display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;
+                   transition:border-color 0.2s;position:relative;"
+            onmouseenter="this.style.borderColor='var(--accent)'" onmouseleave="this.style.borderColor='var(--border)'">
+            <i id="vFotoIcon" class="fa fa-camera" style="font-size:22px;color:var(--text3);"></i>
+            <img id="vFotoImg" src="" style="display:none;width:100%;height:100%;object-fit:cover;position:absolute;inset:0;">
+          </div>
+          <input type="file" id="vFotoInput" hidden accept="image/*" onchange="previewVendFoto(this)">
+          <span style="font-size:10px;color:var(--text3);text-align:center;line-height:1.3;">Foto del<br>vendedor</span>
+          <button type="button" id="vFotoQuitarBtn" onclick="quitarFotoVend()" style="display:none;font-size:10px;padding:2px 8px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:var(--danger);border-radius:5px;cursor:pointer;font-family:'Sora',sans-serif;">Quitar</button>
+        </div>
+
+        <!-- Datos -->
+        <div style="flex:1;display:flex;flex-direction:column;gap:0;">
+          <div class="form-row" style="margin-bottom:0;">
+            <div class="form-field"><label>Nombre *</label><input type="text" id="vNombre" placeholder="Nombre"></div>
+            <div class="form-field"><label>Apellido *</label><input type="text" id="vApellido" placeholder="Apellido"></div>
+          </div>
+          <div class="form-row" style="margin-bottom:0;">
+            <div class="form-field"><label>Usuario *</label><input type="text" id="vUsuario" placeholder="usuario123" autocomplete="off"></div>
+            <div class="form-field"><label>Contraseña *</label><div class="form-input-wrap" style="width:100%;display:block;"><i class="fa fa-lock"></i><input type="password" id="vPassword" placeholder="Mínimo 4 caracteres" autocomplete="new-password" class="form-input" style="padding-left:40px;padding-right:38px;width:100%;"><span onclick="(function(){var i=document.getElementById('vPassword');var e=document.getElementById('vPassEye');i.type=i.type==='password'?'text':'password';e.className=i.type==='password'?'fa fa-eye':'fa fa-eye-slash';})()" style="position:absolute;right:11px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--text3);font-size:14px;z-index:2;"><i class="fa fa-eye" id="vPassEye"></i></span></div></div>
+          </div>
+          <div class="form-field"><label>Teléfono</label><input type="text" id="vTelefono" placeholder="987 654 321"></div>
+        </div>
+      </div>
+
+      <!-- Permisos de Acceso -->
+      <div class="form-field" style="margin-bottom:0;">
+        <label style="display:flex;align-items:center;justify-content:space-between;">
+          <span>Permisos de Acceso</span>
+          <span style="display:flex;gap:6px;">
+            <button type="button" onclick="toggleTodosPermisos(true)" style="font-size:10px;padding:2px 8px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);color:var(--accent3);border-radius:5px;cursor:pointer;font-family:'Sora',sans-serif;">Todos</button>
+            <button type="button" onclick="toggleTodosPermisos(false)" style="font-size:10px;padding:2px 8px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:var(--danger);border-radius:5px;cursor:pointer;font-family:'Sora',sans-serif;">Ninguno</button>
+          </span>
+        </label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px;">
+          <div class="perm-item" style="justify-content:flex-end;gap:8px;"><label for="p1" style="display:flex;align-items:center;gap:6px;cursor:pointer;"><span style="font-size:15px;">📊</span><span>Dashboard</span></label><input type="checkbox" id="p1" checked style="flex-shrink:0;width:16px;height:16px;accent-color:var(--accent);cursor:pointer;"></div>
+          <div class="perm-item" style="justify-content:flex-end;gap:8px;"><label for="p2" style="display:flex;align-items:center;gap:6px;cursor:pointer;"><span style="font-size:15px;">🛒</span><span>Punto de Venta</span></label><input type="checkbox" id="p2" checked style="flex-shrink:0;width:16px;height:16px;accent-color:var(--accent);cursor:pointer;"></div>
+          <div class="perm-item" style="justify-content:flex-end;gap:8px;"><label for="p3" style="display:flex;align-items:center;gap:6px;cursor:pointer;"><span style="font-size:15px;">📦</span><span>Productos</span></label><input type="checkbox" id="p3" style="flex-shrink:0;width:16px;height:16px;accent-color:var(--accent);cursor:pointer;"></div>
+          <div class="perm-item" style="justify-content:flex-end;gap:8px;"><label for="p4" style="display:flex;align-items:center;gap:6px;cursor:pointer;"><span style="font-size:15px;">👥</span><span>Clientes</span></label><input type="checkbox" id="p4" style="flex-shrink:0;width:16px;height:16px;accent-color:var(--accent);cursor:pointer;"></div>
+          <div class="perm-item" style="justify-content:flex-end;gap:8px;"><label for="p5" style="display:flex;align-items:center;gap:6px;cursor:pointer;"><span style="font-size:15px;">🚛</span><span>Compras</span></label><input type="checkbox" id="p5" style="flex-shrink:0;width:16px;height:16px;accent-color:var(--accent);cursor:pointer;"></div>
+          <div class="perm-item" style="justify-content:flex-end;gap:8px;"><label for="p6" style="display:flex;align-items:center;gap:6px;cursor:pointer;"><span style="font-size:15px;">📈</span><span>Reportes</span></label><input type="checkbox" id="p6" style="flex-shrink:0;width:16px;height:16px;accent-color:var(--accent);cursor:pointer;"></div>
+          <div class="perm-item" style="justify-content:flex-end;gap:8px;"><label for="p7" style="display:flex;align-items:center;gap:6px;cursor:pointer;"><span style="font-size:15px;">👔</span><span>Usuarios</span></label><input type="checkbox" id="p7" style="flex-shrink:0;width:16px;height:16px;accent-color:var(--accent);cursor:pointer;"></div>
+          <div class="perm-item" style="justify-content:flex-end;gap:8px;"><label for="p8" style="display:flex;align-items:center;gap:6px;cursor:pointer;"><span style="font-size:15px;">⚙️</span><span>Configuración</span></label><input type="checkbox" id="p8" style="flex-shrink:0;width:16px;height:16px;accent-color:var(--accent);cursor:pointer;"></div>
+        </div>
+      </div>
+
+    </div>
+    <div class="modal-footer" id="modalVendedorFooter">
+      <button class="btn btn-secondary" onclick="closeModal('modalVendedor');resetModalVendedorFooter();">Cancelar</button>
+      <button class="btn btn-primary" onclick="addVendedor()"><i class="fa fa-floppy-disk"></i> Guardar Vendedor</button>
+    </div>
+  </div>
+</div>

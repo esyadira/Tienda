@@ -1,0 +1,183 @@
+/* ====== TICKET DE VENTA ====== */
+/* Papel térmico: 58 mm o 80 mm. Se usa en la venta, en la vista previa y al imprimir. */
+/* La térmica imprime solo en negro puro: un gris sale como puntos sueltos y se ve casi borrado. Por eso todo el ticket va en negro. */
+.tk{position:relative;background:#fff;color:#000;margin:0 auto 12px;padding:22px 16px 26px;box-sizing:border-box;
+  font-family:'JetBrains Mono',Consolas,'Lucida Console','Courier New',monospace;font-size:12px;line-height:1.25;box-shadow:0 6px 22px rgba(0,0,0,0.16);}
+.tk-80{width:80mm;max-width:100%;}
+.tk-58{width:58mm;max-width:100%;font-size:11px;padding:18px 10px 22px;}
+/* borde en zigzag abajo, solo en pantalla */
+.tk::after{content:'';position:absolute;left:0;right:0;bottom:-7px;height:8px;
+  background:linear-gradient(135deg,#fff 50%,transparent 50%) 0 0/12px 8px,linear-gradient(225deg,#fff 50%,transparent 50%) 0 0/12px 8px;}
+.tk-cab{text-align:center;margin-bottom:4px;}
+.tk-logo{display:block;margin:0 auto 12px;width:100%;height:auto;max-height:150px;object-fit:contain;}
+.tk-58 .tk-logo{max-height:110px;}
+.tk-logo-vacio{width:100%;height:72px;box-sizing:border-box;margin:0 auto 12px;border:1.5px dashed #aaa;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:9px;color:#999;letter-spacing:1px;}
+.tk-nombre{font-size:1.35em;letter-spacing:0.5px;line-height:1.2;margin-bottom:2px;}
+.tk-dato{overflow-wrap:anywhere;}
+.tk-sep{margin:14px 0;} /* solo espacio entre secciones, sin líneas */
+.tk-bloque{margin:0;}
+.tk-row{display:flex;justify-content:space-between;align-items:baseline;gap:10px;}
+.tk-row > span:last-child{text-align:right;white-space:nowrap;}
+.tk-fecha{text-align:right;}
+.tk-boleta{display:block;}
+/* Cant. | Descripción | Precio | Importe (en 58 mm sin Precio). Los anchos (--wc, --wp, --wi, en caracteres) los calcula ticketHTML */
+.tk-cols,.tk-item{display:grid;grid-template-columns:var(--wc,5ch) minmax(0,1fr) var(--wp,8ch) var(--wi,8ch);column-gap:1ch;align-items:baseline;}
+.tk-58 .tk-cols,.tk-58 .tk-item{grid-template-columns:var(--wc,5ch) minmax(0,1fr) var(--wi,8ch);}
+.tk-cols span:nth-child(n+3),.tk-item .tk-p,.tk-item .tk-i{text-align:right;white-space:nowrap;}
+/* fila de signos "=" (bajo los títulos y al terminar los productos) */
+.tk-eq{display:flex;justify-content:center;overflow:hidden;white-space:nowrap;line-height:1;margin:1px 0 6px;}
+.tk-eq span{flex:none;}
+.tk-item{margin-bottom:5px;}
+.tk-item .tk-d{word-break:break-word;}
+.tk-item .tk-pr{grid-column:2 / -1;}
+.tk-cant{text-align:left;margin-top:10px;}
+.tk-r{text-align:right;}
+.tk-total{margin:12px 0 8px;text-align:center;} /* el total va al centro */
+.tk-mini{font-size:0.9em;}
+/* Total, pagó y vuelto: resaltados (más grandes) salvo que se pida tamaño normal */
+.tk:not(.tk-tot-n) .tk-r{font-size:1.15em;}
+.tk:not(.tk-tot-n) .tk-r.tk-total{font-size:1.4em;}
+.tk:not(.tk-tot-n) .tk-r.tk-mini{font-size:0.9em;}
+.tk-pie{text-align:center;margin-top:4px;}
+.tk-msg{margin-bottom:2px;}
+/* Tipos de letra (todos monoespaciados; el de JetBrains es el base de .tk) */
+.tk-f-plex{font-family:'IBM Plex Mono',Consolas,'Lucida Console','Courier New',monospace;}
+.tk-f-courier{font-family:'Courier Prime','Courier New',Consolas,monospace;}
+.tk-f-space{font-family:'Space Mono',Consolas,'Courier New',monospace;}
+/* Negrita: solo si se activa "Todo en negrita" */
+.tk,.tk *{font-weight:400 !important;}
+.tk.tk-neg,.tk.tk-neg *{font-weight:700 !important;}
+
+/* Ventana "Venta registrada" */
+#modalTicket .modal-body{background:var(--surface2);}
+
+/* ====== PANEL CONFIGURACIÓN → TICKET ====== */
+.tkcfg{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:26px;align-items:start;}
+.tkcfg-prev{position:sticky;top:0;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:10px 8px 6px;overflow:hidden;}
+#tk-preview{display:flex;justify-content:center;align-items:flex-start;max-height:calc(90vh - 190px);overflow-y:auto;padding:4px 6px 14px;scrollbar-width:thin;}
+#tk-preview .tk{margin:0 auto;flex-shrink:0;}
+.tkcfg-sec{font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin:0 0 10px;display:flex;align-items:center;gap:8px;}
+.tkcfg-sec i{color:var(--accent);}
+.tkcfg-bloque{margin-bottom:22px;}
+.tkcfg-nota{font-size:11px;color:var(--text3);margin-top:8px;}
+.tk-chips{display:flex;flex-wrap:wrap;gap:8px;}
+.tk-chip{position:relative;cursor:pointer;}
+.tk-chip input{position:absolute;opacity:0;width:0;height:0;}
+.tk-chip span{display:inline-flex;align-items:center;gap:7px;padding:8px 13px;border-radius:999px;font-size:12px;font-weight:600;color:var(--text2);
+  background:var(--surface2);border:1.5px solid var(--border);transition:all 0.15s;user-select:none;}
+.tk-chip span::before{content:'';width:14px;height:14px;border-radius:50%;border:2px solid var(--border);box-sizing:border-box;transition:all 0.15s;}
+.tk-chip:hover span{border-color:var(--accent);}
+.tk-chip input:checked + span{color:var(--accent);border-color:var(--accent);background:rgba(var(--accent-rgb,245,158,11),0.12);}
+.tk-chip input:checked + span::before{border-color:var(--accent);background:var(--accent);box-shadow:inset 0 0 0 2px var(--surface);}
+.tk-chip input:focus-visible + span{outline:2px solid var(--accent);outline-offset:2px;}
+.tk-seg{display:inline-flex;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:3px;gap:3px;}
+.tk-seg-btn{border:none;background:transparent;padding:8px 18px;border-radius:8px;cursor:pointer;font-family:'Sora',sans-serif;font-size:12px;font-weight:700;color:var(--text3);transition:all 0.15s;}
+.tk-seg-btn.on{background:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(var(--accent-rgb,245,158,11),0.35);}
+.tk-seg-btn small{display:block;font-size:10px;font-weight:500;opacity:0.85;}
+.tk-espacios{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+/* selector de tipo de letra: cada nombre se ve con su propia letra */
+#tk-fuente{flex-wrap:wrap;}
+#tk-fuente .tk-seg-btn{padding:8px 12px;font-size:13px;}
+#tk-fuente .tk-seg-btn[data-v="jetbrains"]{font-family:'JetBrains Mono',Consolas,monospace;}
+#tk-fuente .tk-seg-btn[data-v="plex"]{font-family:'IBM Plex Mono',Consolas,monospace;}
+#tk-fuente .tk-seg-btn[data-v="courier"]{font-family:'Courier Prime','Courier New',monospace;}
+#tk-fuente .tk-seg-btn[data-v="space"]{font-family:'Space Mono',Consolas,monospace;}
+#tk-fuente ~ .tk-espacios,#tk-fuente ~ .tk-chips{margin-top:12px;}
+.tk-stepper{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:8px 10px;}
+.tk-stepper label{font-size:12px;font-weight:600;color:var(--text2);}
+.tk-stepper-ctl{display:flex;align-items:center;gap:6px;}
+.tk-stepper-ctl button{width:26px;height:26px;border-radius:7px;border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;font-weight:800;line-height:1;}
+.tk-stepper-ctl button:hover{border-color:var(--accent);color:var(--accent);}
+.tk-stepper-ctl input{width:38px;text-align:center;padding:4px 0;border:none;background:transparent;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;-moz-appearance:textfield;}
+.tk-stepper-ctl input::-webkit-outer-spin-button,.tk-stepper-ctl input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+/* El panel Ticket se acomoda a la pantalla: ventana ancha, formulario en dos columnas y sin barra de desplazamiento */
+#modalConfig .modal:has(#cfg-ticket:not([style*="none"])){max-width:890px;}
+.tkcfg-intro{font-size:12px;color:var(--text3);margin:0 0 14px;}
+.tkcfg-cols{display:grid;grid-template-columns:minmax(0,1fr);align-items:start;}
+.tkcfg-acciones{display:flex;gap:8px;flex-wrap:wrap;}
+.tkcfg .tkcfg-bloque{margin-bottom:18px;}
+.tkcfg .tk-stepper{padding:6px 8px;gap:6px;}
+.tkcfg .tk-stepper-ctl{gap:4px;}
+.tkcfg .tk-stepper-ctl button{width:24px;height:24px;}
+.tkcfg .tk-stepper-ctl input{width:32px;}
+
+@media (max-width:1100px){
+  .tkcfg-cols{grid-template-columns:1fr;}
+}
+/* pantallas bajitas: menos aire entre bloques para que todo siga cabiendo */
+@media (max-height:760px){
+  .tkcfg .tkcfg-bloque{margin-bottom:12px;}
+  .tkcfg-sec{margin-bottom:6px;}
+  .tkcfg-intro{margin-bottom:8px;}
+  .tkcfg .tk-chip span{padding:6px 11px;}
+  .tk-seg-btn{padding-top:6px;padding-bottom:6px;}
+}
+@media (max-width:820px){
+  .tkcfg{grid-template-columns:1fr;}
+  .tkcfg-prev{position:static;order:-1;}
+  #tk-preview{max-height:380px;}
+}
+
+/* Edición directa sobre la vista previa (solo en pantalla: al imprimir no aparece nada de esto) */
+.tk-extra{white-space:pre-wrap;min-height:1.45em;}
+.tk-clic{cursor:pointer;}
+.tk-editable .tk-ed{outline:none;border-radius:3px;cursor:text;transition:background 0.15s,box-shadow 0.15s;}
+.tk-editable .tk-ed:hover{background:rgba(245,158,11,0.14);}
+.tk-editable .tk-ed:focus{background:rgba(245,158,11,0.2);box-shadow:0 0 0 1.5px #f59e0b;}
+.tk-ed:empty::before{content:attr(data-ph);color:#b5b5b5;text-transform:none;letter-spacing:0;}
+.tk-editable .tk-logo:hover,.tk-editable .tk-logo-vacio:hover{outline:2px dashed #f59e0b;outline-offset:2px;}
+.tk-logo-wrap{position:relative;display:block;line-height:0;margin-bottom:12px;}
+.tk-logo-wrap .tk-logo{margin:0;}
+.tk-logo-x{position:absolute;top:6px;right:6px;width:18px;height:18px;padding:0;border:none;border-radius:50%;background:#ef4444;color:#fff;
+  font-size:13px;line-height:18px;cursor:pointer;opacity:0;transition:opacity 0.15s;}
+.tk-logo-wrap:hover .tk-logo-x,.tk-logo-x:focus{opacity:1;}
+
+/* Botones del panel Ticket: barra al pie */
+.tkcfg-acciones-pie{margin-top:18px;padding-top:16px;border-top:1px solid var(--border);align-items:center;}
+
+/* ====== PANEL TICKET: ventana de altura fija, sin barra de desplazamiento y con los botones siempre visibles ====== */
+.tkcfg .tkcfg-bloque{margin-bottom:16px;}
+.tkcfg .tkcfg-sec{margin-bottom:8px;}
+.tkcfg .tk-chips{gap:0 8px;margin-bottom:-8px;}
+.tkcfg .tk-chip{margin-bottom:8px;}
+.tkcfg .tk-chip span{padding:7px 13px;}
+.tkcfg .tk-seg-btn{padding-top:7px;padding-bottom:7px;}
+.tkcfg-intro{margin-bottom:12px;}
+#tk-fuente ~ .tk-chips{margin-top:12px;}
+.tkcfg .tkcfg-acciones{margin-top:4px;flex-wrap:nowrap;}
+.tkcfg .tkcfg-acciones .btn{white-space:nowrap;}
+
+@media (min-width:821px){
+  #modalConfig .modal:has(#cfg-ticket:not([style*="none"])){
+    height:min(calc(100vh - 40px),680px);max-height:none;
+    display:flex;flex-direction:column;overflow:hidden;
+  }
+  #modalConfig .modal:has(#cfg-ticket:not([style*="none"])) > .modal-header{flex-shrink:0;padding:14px 24px;}
+  #modalConfig .modal:has(#cfg-ticket:not([style*="none"])) > .modal-body{
+    flex:1;min-height:0;overflow:hidden;padding:12px 24px;display:flex;flex-direction:column;
+  }
+  #modalConfig #cfg-ticket:not([style*="none"]){display:flex !important;flex-direction:column;flex:1;min-height:0;}
+  #cfg-ticket .tkcfg{flex:1;min-height:0;grid-template-rows:minmax(0,1fr);align-items:stretch;}
+  #cfg-ticket .tkcfg-form{min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;}
+  #cfg-ticket .tkcfg-prev{position:static;min-height:0;display:flex;flex-direction:column;}
+  #cfg-ticket #tk-preview{flex:1;min-height:0;max-height:calc(min(100vh - 40px,680px) - 124px);}
+}
+
+/* pantallas bajas: se aprieta un poco el espaciado para que todo siga cabiendo sin scroll */
+@media (max-height:820px){
+  .tkcfg .tkcfg-bloque{margin-bottom:11px;}
+  .tkcfg .tkcfg-sec{margin-bottom:6px;}
+  .tkcfg .tk-chip span{padding:6px 12px;}
+  .tkcfg-intro{margin-bottom:8px;}
+}
+
+/* Salto de línea dentro de una fila de opciones (Correo y Cliente pasan a la línea de abajo) */
+.tk-break{flex-basis:100%;height:0;}
+
+/* Botones Guardar / Probar / Diseño original: al fondo de la columna del formulario */
+@media (min-width:821px){
+  #cfg-ticket .tkcfg-form{display:flex;flex-direction:column;}
+  #cfg-ticket .tkcfg-cols{display:flex;flex-direction:column;flex:1;min-height:0;}
+  #cfg-ticket .tkcfg-col{display:flex;flex-direction:column;flex:1;}
+  #cfg-ticket .tkcfg-acciones{margin-top:auto;padding-top:16px;}
+}

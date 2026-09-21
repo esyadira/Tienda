@@ -1,0 +1,29 @@
+<!-- Modal Proveedor (nuevo / editar) -->
+<div class="modal-overlay" id="modalCompProv">
+  <div class="modal modal-lg" style="max-width:860px;">
+    <div class="modal-header"><h3 id="cpPvTitulo"><i class="fa fa-truck" style="color:var(--accent);margin-right:8px;"></i>Nuevo proveedor</h3><div class="modal-close" onclick="closeModal('modalCompProv')"><i class="fa fa-xmark"></i></div></div>
+    <div class="modal-body cp-pv-body">
+      <div>
+        <div class="form-field"><label>Nombre *</label><input type="text" id="cpPvNombre" placeholder="Ej: Distribuidora Los Andes"></div>
+        <div class="form-row">
+          <div class="form-field"><label>Teléfono / WhatsApp</label><input type="text" id="cpPvTel" placeholder="999 999 999"></div>
+          <div class="form-field"><label>RUC</label><input type="text" id="cpPvRuc" placeholder="Opcional"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-field"><label>Persona de contacto</label><input type="text" id="cpPvContacto" placeholder="Opcional"></div>
+          <div class="form-field"><label>Correo</label><input type="email" id="cpPvEmail" placeholder="Opcional"></div>
+        </div>
+        <div class="form-field" style="margin-bottom:0;"><label>Notas</label><textarea id="cpPvNotas" rows="3" placeholder="Ej: pasa los martes, pedido mínimo S/ 200..."></textarea></div>
+      </div>
+      <div class="cp-pv-prods">
+        <div class="cp-pv-h"><b>Productos que te vende</b><span id="cpPvCount">0 seleccionados</span></div>
+        <div class="cp-search" style="max-width:none;margin:8px 0;"><i class="fa fa-magnifying-glass"></i><input type="text" id="cpPvBuscar" placeholder="Buscar producto..." oninput="cPvRenderProds()"></div>
+        <div class="cp-pv-list" id="cpPvProds"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modalCompProv')">Cancelar</button>
+      <button class="btn btn-primary" onclick="cPvGuardar()"><i class="fa fa-floppy-disk"></i> Guardar proveedor</button>
+    </div>
+  </div>
+</div>

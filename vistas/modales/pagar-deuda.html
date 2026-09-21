@@ -1,0 +1,42 @@
+<!-- Modal Pagar Deuda Cliente -->
+<div class="modal-overlay" id="modalPagarDeuda">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header"><h3><i class="fa fa-money-bill" style="color:var(--accent3);margin-right:8px;"></i>Registrar Pago</h3><div class="modal-close" onclick="closeModal('modalPagarDeuda')"><i class="fa fa-xmark"></i></div></div>
+    <div class="modal-body">
+      <div id="pagarDeudaInfo" style="margin-bottom:16px;padding:14px;background:var(--surface2);border-radius:10px;text-align:center;">
+        <div style="font-size:12px;color:var(--text3);margin-bottom:4px;">Deuda actual de</div>
+        <div id="pagarDeudaNombre" style="font-size:15px;font-weight:700;margin-bottom:8px;"></div>
+        <div id="pagarDeudaTotal" style="font-size:32px;font-weight:800;color:var(--danger);letter-spacing:-1px;"></div>
+      </div>
+
+      <!-- Método de pago -->
+      <div class="form-field" style="margin-bottom:14px;">
+        <label>Método de Pago</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px;">
+          <div id="pagarMetodoEfectivo" onclick="seleccionarMetodoPago('efectivo')"
+            style="padding:12px;background:rgba(16,185,129,0.12);border:2px solid #10b981;border-radius:9px;text-align:center;cursor:pointer;transition:all 0.2s;">
+            <i class="fa fa-money-bill" style="font-size:18px;color:#10b981;display:block;margin-bottom:4px;"></i>
+            <span style="font-size:13px;font-weight:700;color:#10b981;">Efectivo</span>
+          </div>
+          <div id="pagarMetodoYape" onclick="seleccionarMetodoPago('yape')"
+            style="padding:12px;background:var(--surface2);border:2px solid var(--border);border-radius:9px;text-align:center;cursor:pointer;transition:all 0.2s;">
+            <i class="fa fa-mobile-screen" style="font-size:18px;color:var(--text3);display:block;margin-bottom:4px;"></i>
+            <span style="font-size:13px;font-weight:700;color:var(--text3);">Yape</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-field">
+        <label>Monto que paga</label>
+        <input type="number" id="pagarMonto" placeholder="0.00" step="0.10" min="0"
+          style="width:100%;padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:'Sora',sans-serif;font-size:18px;font-weight:700;text-align:center;"
+          oninput="calcDeudaRestante()">
+      </div>
+      <div id="deudaRestanteInfo" style="display:none;margin-top:12px;padding:12px;border-radius:10px;text-align:center;font-size:14px;font-weight:700;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modalPagarDeuda')">Cancelar</button>
+      <button class="btn btn-primary" onclick="confirmarPagoDeuda()"><i class="fa fa-check"></i> Registrar Pago</button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,25 @@
+<!-- Modal Recibir orden de compra -->
+<div class="modal-overlay" id="modalCompRecibir">
+  <div class="modal modal-lg" style="max-width:860px;">
+    <div class="modal-header"><h3><i class="fa fa-box-open" style="color:var(--accent3);margin-right:8px;"></i>Recibir mercadería</h3><div class="modal-close" onclick="closeModal('modalCompRecibir')"><i class="fa fa-xmark"></i></div></div>
+    <div class="modal-body">
+      <div class="cp-rec-head" id="cpRecHead"></div>
+      <div class="cp-otable" id="cpRecItems"></div>
+      <label class="cp-check"><input type="checkbox" id="cpRecCosto" checked> Actualizar el costo de los productos con estos precios</label>
+      <div class="cp-pay">
+        <div class="cp-pay-t">¿Cómo pagaste?</div>
+        <div class="cp-seg" id="cpRecMetodo">
+          <button type="button" data-m="efectivo" onclick="cRecMetodo('efectivo')"><i class="fa fa-money-bill-wave"></i> Efectivo</button>
+          <button type="button" data-m="yape" onclick="cRecMetodo('yape')"><i class="fa fa-mobile-screen"></i> Yape</button>
+          <button type="button" data-m="ninguno" onclick="cRecMetodo('ninguno')" title="No descuenta nada de los reportes de caja"><i class="fa fa-ban"></i> No registrar</button>
+        </div>
+        <div class="form-field" id="cpRecMontoBox" style="margin:12px 0 0;max-width:220px;"><label>Monto pagado</label><input type="number" id="cpRecMonto" step="0.01" min="0" placeholder="0.00" oninput="_cRec.montoManual=true"></div>
+      </div>
+      <div class="cp-total"><span>Total de la compra</span><b id="cpRecTotal">S/. 0.00</b></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modalCompRecibir')">Cancelar</button>
+      <button class="btn btn-primary" onclick="cRecConfirmar()"><i class="fa fa-check"></i> Confirmar recepción</button>
+    </div>
+  </div>
+</div>

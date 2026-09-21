@@ -1,0 +1,117 @@
+/* ====== APP SHELL ====== */
+#app{display:none;height:100vh;flex-direction:column;}
+#app.visible{display:flex;}
+
+/* ====== HEADER ====== */
+.header {
+  height:var(--header-h);flex-shrink:0;
+  background: var(--surface);
+  display:flex;align-items:center;padding:0 24px 0 0;
+  gap:0;position:relative;z-index:100;
+}
+.header-brand {
+  width:var(--sidebar-w);flex-shrink:0;
+  display:flex;align-items:center;gap:12px;padding:0 20px;
+  height:100%;
+}
+.header-brand-icon {
+  width:36px;height:36px;border-radius:10px;
+  background:linear-gradient(135deg,var(--accent),#d97706);
+  display:flex;align-items:center;justify-content:center;font-size:17px;color:#000;
+  box-shadow: 0 0 16px rgba(245,158,11,0.25);
+}
+.header-brand h2{font-size:15px;font-weight:700;letter-spacing:-0.3px;color:var(--text);}
+.header-brand small{font-size:10px;color:var(--text3);display:block;letter-spacing:0.5px;margin-top:1px;}
+.header-right{margin-left:auto;display:flex;align-items:center;gap:6px;}
+
+/* Reloj estético */
+.header-time{
+  display:flex;align-items:center;gap:8px;
+  padding:7px 14px;
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:10px;
+  transition: border-color 0.2s;
+}
+.header-time:hover{border-color:rgba(var(--accent-rgb,245,158,11),0.4);}
+.header-time-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--accent3);
+  box-shadow:0 0 6px var(--accent3);
+  animation: pulse-dot 2s ease-in-out infinite;
+  flex-shrink:0;
+}
+@keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(0.8)}}
+.header-time-text{
+  font-family:'JetBrains Mono',monospace;font-size:13px;
+  color:var(--text2);letter-spacing:0.5px;
+}
+.header-time-date{
+  font-size:10px;color:var(--text3);
+  letter-spacing:0.3px;border-left:1px solid var(--border);padding-left:8px;margin-left:2px;
+}
+
+/* Botón notificaciones */
+.notif-btn {
+  position:relative;width:38px;height:38px;border-radius:10px;
+  background:var(--surface2);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:all 0.2s;color:var(--text2);font-size:15px;
+}
+.notif-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(var(--accent-rgb,245,158,11),0.06);}
+.notif-badge {
+  position:absolute;top:-5px;right:-5px;
+  width:18px;height:18px;border-radius:50%;
+  background:var(--danger);font-size:9px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;color:#fff;
+  border:2px solid var(--surface);
+  box-shadow:0 0 8px rgba(239,68,68,0.4);
+}
+.notif-panel {
+  position:absolute;top:calc(var(--header-h) + 8px);right:60px;
+  width:320px;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);box-shadow:var(--shadow);z-index:200;
+  display:none;overflow:hidden;
+  animation: dropDown 0.2s ease;
+  max-height:420px;flex-direction:column;
+}
+.notif-panel.show{display:flex;}
+#notifList{overflow-y:auto;flex:1;min-height:0;}
+@keyframes dropDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.notif-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.notif-header h4{font-size:13px;font-weight:600;}
+.notif-header span{font-size:11px;color:var(--text3);}
+.notif-item{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:flex-start;}
+.notif-item:last-child{border:none;}
+.notif-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+.notif-icon.warn{background:rgba(249,115,22,0.15);color:var(--warning);}
+.notif-icon.danger{background:rgba(239,68,68,0.15);color:var(--danger);}
+.notif-item p{font-size:12px;line-height:1.4;color:var(--text2);}
+.notif-item strong{color:var(--text);font-size:12px;}
+
+/* Chip de usuario rediseñado */
+.user-chip {
+  display:flex;align-items:center;gap:10px;
+  padding:6px 14px 6px 8px;
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:10px;
+  cursor:pointer;transition:all 0.2s;
+}
+.user-chip:hover{border-color:rgba(var(--accent-rgb,245,158,11),0.4);background:rgba(var(--accent-rgb,245,158,11),0.04);}
+.user-avatar{
+  width:30px;height:30px;border-radius:8px;
+  background:linear-gradient(135deg,var(--accent),#d97706);
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:800;color:#000;
+  flex-shrink:0;
+}
+.user-chip-info{line-height:1.3;display:flex;align-items:center;gap:6px;}
+.user-chip-info strong{font-size:12px;display:inline;color:var(--text);}
+.user-chip-info .user-chip-sep{width:1px;height:12px;background:var(--border);border-radius:1px;flex-shrink:0;}
+.user-chip-info small{font-size:10px;color:var(--accent);font-weight:600;letter-spacing:0.3px;}
+.user-chip-chevron{
+  font-size:9px;color:var(--text3);margin-left:2px;
+  transition:transform 0.2s;
+}
+

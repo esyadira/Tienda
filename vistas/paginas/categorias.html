@@ -1,0 +1,40 @@
+      <div class="page" id="page-categorias" style="height:calc(100vh - var(--header-h) - 48px); overflow:hidden;">
+        <div class="page-header" style="flex-shrink:0;">
+          <div class="page-title">
+            <h1>Gestión de Categorías</h1>
+            <p>Organiza tus productos para un acceso más rápido</p>
+          </div>
+          <button class="btn btn-primary" onclick="openNuevaCategoria()">
+            <i class="fa fa-plus"></i> Nueva Categoría
+          </button>
+        </div>
+
+        <div class="stats-grid" id="catStatsGrid" style="flex-shrink:0;margin-bottom:16px;">
+          </div>
+
+        <div class="table-wrap" style="flex:1; overflow:hidden; display:flex; flex-direction:column; min-height:0;">
+          <div class="table-toolbar" style="flex-shrink:0;">
+            <div class="table-search">
+              <i class="fa fa-magnifying-glass"></i>
+              <input type="text" id="catSearchInput" placeholder="Buscar categoría..." oninput="filterTable(this, 'catTable')">
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="clearCatFilter()"><i class="fa fa-broom"></i> Limpiar</button>
+            <span id="catContador" style="margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:11px;background:rgba(245,158,11,0.1);color:var(--accent);padding:2px 8px;border-radius:20px;font-weight:700;"></span>
+          </div>
+          <div style="flex:1; overflow-y:auto; min-height:0;">
+            <table id="catTable" style="width:100%;border-collapse:collapse;">
+              <thead style="position:sticky;top:0;z-index:10;background:var(--surface2);">
+                <tr>
+                  <th>Icono</th>
+                  <th>Nombre de Categoría</th>
+                  <th>Total Productos</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="catTbody">
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>

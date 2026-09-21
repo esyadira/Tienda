@@ -1,0 +1,53 @@
+      <!-- ===== PRODUCTOS ===== -->
+      <div class="page" id="page-productos" style="height:calc(100vh - var(--header-h) - 48px); overflow:hidden;">
+        <div class="page-header" style="flex-shrink:0;">
+          <div class="page-title">
+            <h1>Productos</h1>
+            <p>Gestión de inventario y catálogo</p>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <button class="btn btn-secondary btn-sm" onclick="toggleProductView()"><i class="fa fa-list" id="viewToggleIcon"></i></button>
+            <button class="btn btn-primary" onclick="openNuevoProducto()"><i class="fa fa-plus"></i> Nuevo Producto</button>
+          </div>
+        </div>
+        <div class="table-wrap" style="flex:1; overflow:hidden; display:flex; flex-direction:column; min-height:0;">
+          <!-- Vistas: cada una muestra la misma lista, pero solo con esos productos -->
+          <div class="prod-tabs" id="prodVistaTabs" style="flex-shrink:0;">
+            <button type="button" class="prod-tab activo" data-vista="todos" onclick="setProdVista('todos')"><i class="fa fa-box"></i> Productos <span class="prod-tab-count"></span></button>
+            <button type="button" class="prod-tab" data-vista="promo" onclick="setProdVista('promo')"><i class="fa fa-star" style="color:#f59e0b;"></i> Promociones <span class="prod-tab-count"></span></button>
+            <button type="button" class="prod-tab" data-vista="bajo" onclick="setProdVista('bajo')"><i class="fa fa-triangle-exclamation" style="color:#ef4444;"></i> Bajo stock <span class="prod-tab-count"></span></button>
+            <button type="button" class="prod-tab" data-vista="fijo" onclick="setProdVista('fijo')"><i class="fa fa-rotate" style="color:#3b82f6;"></i> Stock fijo <span class="prod-tab-count"></span></button>
+          </div>
+          <div class="table-toolbar" style="flex-shrink:0;">
+            <div class="table-search">
+              <i class="fa fa-magnifying-glass"></i>
+              <input type="text" id="prodSearchInput" placeholder="Buscar por nombre o código..." oninput="filterProducts(this.value)" autocomplete="off">
+            </div>
+            
+            <select class="btn btn-secondary btn-sm" id="filterCatSelect" onchange="filterProducts(document.getElementById('prodSearchInput').value);_enfocarBusquedaProductos();">
+              </select>
+
+            <button class="btn btn-secondary btn-sm" onclick="clearProductFilters()">
+              <i class="fa fa-broom"></i> Limpiar
+            </button>
+
+            <button class="btn btn-secondary btn-sm" style="margin-left:auto;" onclick="exportProductsExcel()">
+              <i class="fa fa-file-excel"></i> Exportar
+            </button>
+            <span id="prodContador" style="font-family:'JetBrains Mono',monospace;font-size:11px;background:rgba(245,158,11,0.1);color:var(--accent);padding:2px 8px;border-radius:20px;font-weight:700;"></span>
+          </div>
+          
+          <div id="prodListView" style="flex:1; overflow-y:auto; min-height:0; display:none;">
+            <table id="prodTable" style="width:100%;border-collapse:collapse;">
+              <thead style="position:sticky;top:0;z-index:10;background:var(--surface2);">
+                <tr>
+                  <th>Código</th><th>Producto</th><th>Categoría</th>
+                  <th>Stock</th><th>Precio</th><th>Estado</th><th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="prodTbody"></tbody>
+            </table>
+          </div>
+          <div id="prodGridView" class="product-grid-view" style="flex:1; overflow-y:auto; min-height:0;"></div>
+        </div>
+      </div>
