@@ -299,6 +299,13 @@
           <label class="toggle"><input type="checkbox" id="cfg-confirm-del"><span class="toggle-slider"></span></label>
         </div>
 
+        <div style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin:16px 0 10px;">Funciones del Sistema</div>
+        <p style="font-size:11px;color:var(--text3);margin:-6px 0 10px;">Apaga aquí las funciones que no uses: si una función está apagada, desaparece del menú, del dashboard y de las demás pantallas.</p>
+        <div class="config-row">
+          <div class="config-row-info"><h4>Fiar a clientes</h4><p>Permite dejar ventas a deber y muestra el módulo de Clientes en el menú, el dashboard y el punto de venta.</p></div>
+          <label class="toggle"><input type="checkbox" id="cfg-funcion-fiar" onchange="toggleFuncionFiar(this.checked)"><span class="toggle-slider"></span></label>
+        </div>
+
         <div style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin:16px 0 10px;">Información del Sistema</div>
         <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px;font-size:12px;line-height:2;color:var(--text2);">
           <div style="display:flex;justify-content:space-between;"><span>Versión:</span><span style="color:var(--accent);font-weight:600;">BodegaPOS v1.0</span></div>

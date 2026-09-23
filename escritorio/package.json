@@ -1,0 +1,8 @@
+{
+  "name": "bodegapos",
+  "productName": "BodegaPOS",
+  "version": "1.0.0",
+  "description": "BodegaPOS — Sistema de Punto de Venta",
+  "main": "main.js",
+  "author": "BodegaPOS"
+}

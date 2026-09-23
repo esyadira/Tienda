@@ -1,23 +1,34 @@
       <!-- ===== VENTAS ===== -->
       <div class="page" id="page-ventas" style="height: calc(100vh - var(--header-h) - 48px); overflow: hidden;">
-        <div class="page-header" style="flex-shrink: 0; margin-bottom: 16px;">
-          <div class="page-title"><h1>Ventas</h1><p>Registra ventas rápidamente</p></div>
-          <div style="display:flex;gap:8px;align-items:center;">
-            <!-- Buscador de cliente inline en el header -->
-            <div style="position:relative;">
-              <input type="text" id="clientSearchInput" placeholder="🔍 Buscar cliente..." autocomplete="off"
-                style="padding:7px 36px 7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:7px;color:var(--text);font-family:'Sora',sans-serif;font-size:12px;width:180px;transition:all 0.2s;outline:none;"
-                oninput="searchClientPOS(this.value)" onkeypress="crearClienteAlEnter(event)"
-                onfocus="this.style.borderColor='var(--accent)';this.style.width='220px'"
-                onblur="this.style.borderColor='var(--border)';this.style.width='180px'">
-              <div id="clientDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);z-index:300;max-height:220px;overflow-y:auto;margin-top:4px;min-width:220px;"></div>
+        <div class="page-header" style="flex-shrink: 0; margin-bottom: 16px; flex-wrap: wrap; row-gap: 10px;">
+          <div style="display:flex; align-items:center; gap:20px; flex-wrap:wrap; row-gap:10px;">
+            <div class="page-title"><h1>Ventas</h1><p>Registra ventas rápidamente</p></div>
+            <div class="pos-acciones" id="posAccionesBar">
+              <div class="pos-accion-btn" style="--pc:#0ea5e9;--pcbg:rgba(14,165,233,0.14);" onclick="abrirArticuloComun()"><i class="fa fa-tag"></i><span>Artículo Común</span></div>
+              <div class="pos-accion-btn" style="--pc:#8b5cf6;--pcbg:rgba(139,92,246,0.14);" onclick="abrirConsultarPrecio()"><i class="fa fa-magnifying-glass-dollar"></i><span>Consultar Precio</span></div>
+              <div class="pos-accion-btn" style="--pc:#f97316;--pcbg:rgba(249,115,22,0.14);" onclick="abrirEntradaSalida()"><i class="fa fa-right-left"></i><span>Entrada / Salida</span></div>
+              <div class="pos-accion-btn" id="posBtnPendiente" style="--pc:#eab308;--pcbg:rgba(234,179,8,0.14);" onclick="abrirPendientes()"><i class="fa fa-clock"></i><span>Pendiente</span><span class="pos-accion-badge" id="pendientesBadge" style="display:none;">0</span></div>
+              <div class="pos-accion-btn" style="--pc:#3b82f6;--pcbg:rgba(59,130,246,0.14);" onclick="abrirHistorialVentas()"><i class="fa fa-receipt"></i><span>Ventas/Devoluciones</span></div>
             </div>
-            <!-- Info del cliente seleccionado (inline badge) -->
-            <div id="clientSelInfo" style="display:none;padding:5px 10px;background:rgba(var(--accent-rgb,245,158,11),0.08);border:1px solid rgba(var(--accent-rgb,245,158,11),0.25);border-radius:7px;font-size:12px;align-items:center;gap:8px;">
-              <i class="fa fa-user" style="color:var(--accent);font-size:11px;"></i>
-              <span id="clientSelName" style="color:var(--text);font-weight:600;white-space:nowrap;max-width:120px;overflow:hidden;text-overflow:ellipsis;"></span>
-              <span id="clientSelDeuda" style="color:var(--accent);font-size:11px;"></span>
-              <span onclick="clearClientSel()" style="cursor:pointer;color:var(--text3);margin-left:4px;"><i class="fa fa-xmark"></i></span>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <!-- Buscador de cliente inline en el header (se puede ocultar desde Preferencias > Fiar a clientes) -->
+            <div id="posClienteBuscarWrap" style="display:flex;gap:8px;align-items:center;">
+              <div style="position:relative;">
+                <input type="text" id="clientSearchInput" placeholder="🔍 Buscar cliente..." autocomplete="off"
+                  style="padding:7px 36px 7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:7px;color:var(--text);font-family:'Sora',sans-serif;font-size:12px;width:180px;transition:all 0.2s;outline:none;"
+                  oninput="searchClientPOS(this.value)" onkeypress="crearClienteAlEnter(event)"
+                  onfocus="this.style.borderColor='var(--accent)';this.style.width='220px'"
+                  onblur="this.style.borderColor='var(--border)';this.style.width='180px'">
+                <div id="clientDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);z-index:300;max-height:220px;overflow-y:auto;margin-top:4px;min-width:220px;"></div>
+              </div>
+              <!-- Info del cliente seleccionado (inline badge) -->
+              <div id="clientSelInfo" style="display:none;padding:5px 10px;background:rgba(var(--accent-rgb,245,158,11),0.08);border:1px solid rgba(var(--accent-rgb,245,158,11),0.25);border-radius:7px;font-size:12px;align-items:center;gap:8px;">
+                <i class="fa fa-user" style="color:var(--accent);font-size:11px;"></i>
+                <span id="clientSelName" style="color:var(--text);font-weight:600;white-space:nowrap;max-width:120px;overflow:hidden;text-overflow:ellipsis;"></span>
+                <span id="clientSelDeuda" style="color:var(--accent);font-size:11px;"></span>
+                <span onclick="clearClientSel()" style="cursor:pointer;color:var(--text3);margin-left:4px;"><i class="fa fa-xmark"></i></span>
+              </div>
             </div>
             <button class="btn btn-secondary btn-sm" onclick="clearPOSFilter()"><i class="fa fa-broom"></i> Limpiar Filtros</button>
           </div>
@@ -26,13 +37,6 @@
         <div class="ventas-layout" style="display: grid; grid-template-columns: 1fr 450px; gap: 16px; height: calc(100vh - var(--header-h) - 100px); overflow: hidden;">
           
           <div class="productos-panel" style="overflow-y: auto; height: 100%; padding-right: 8px;">
-            <div class="pos-acciones" id="posAccionesBar">
-              <div class="pos-accion-btn" style="--pc:#0ea5e9;--pcbg:rgba(14,165,233,0.14);" onclick="abrirArticuloComun()"><i class="fa fa-tag"></i><span>Artículo Común</span></div>
-              <div class="pos-accion-btn" style="--pc:#8b5cf6;--pcbg:rgba(139,92,246,0.14);" onclick="abrirConsultarPrecio()"><i class="fa fa-magnifying-glass-dollar"></i><span>Consultar Precio</span></div>
-              <div class="pos-accion-btn" style="--pc:#f97316;--pcbg:rgba(249,115,22,0.14);" onclick="abrirEntradaSalida()"><i class="fa fa-right-left"></i><span>Entrada / Salida</span></div>
-              <div class="pos-accion-btn" id="posBtnPendiente" style="--pc:#eab308;--pcbg:rgba(234,179,8,0.14);" onclick="abrirPendientes()"><i class="fa fa-clock"></i><span>Pendiente</span><span class="pos-accion-badge" id="pendientesBadge" style="display:none;">0</span></div>
-              <div class="pos-accion-btn" style="--pc:#3b82f6;--pcbg:rgba(59,130,246,0.14);" onclick="abrirHistorialVentas()"><i class="fa fa-receipt"></i><span>Ventas/Devoluciones</span></div>
-            </div>
             <div class="table-toolbar" style="background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:12px; position: sticky; top: 0; z-index: 10;">
               <div class="table-search" style="max-width:100%; flex:1;"><i class="fa fa-magnifying-glass"></i><input type="text" placeholder="Buscar o escanear código..." oninput="filterPOSProducts(this)" autocomplete="off"></div>
               <select class="btn btn-secondary btn-sm" id="posCatFilter" style="border:1px solid var(--border); background:var(--surface2); color:var(--text); font-family:'Sora',sans-serif; padding:7px 12px; border-radius:7px; cursor:pointer;" onchange="filterPOSByCategory(this.value)">

@@ -4,14 +4,18 @@
     <div class="modal-header"><h3 id="cpOrdTitulo"><i class="fa fa-file-invoice" style="color:var(--accent);margin-right:8px;"></i>Nueva orden de compra</h3><div class="modal-close" onclick="closeModal('modalCompOrden')"><i class="fa fa-xmark"></i></div></div>
     <div class="modal-body">
       <div class="cp-form3">
-        <div class="form-field"><label>Proveedor</label><select id="cpOrdProv"></select></div>
+        <div class="form-field" style="position:relative;">
+          <label>Proveedor</label>
+          <div class="cp-search" style="max-width:none;">
+            <i class="fa fa-magnifying-glass"></i>
+            <input type="text" id="cpOrdProvInput" placeholder="Buscar o escribir proveedor..." autocomplete="off"
+              oninput="cOrdProvBuscar(this.value)" onfocus="cOrdProvBuscar(this.value)"
+              onblur="setTimeout(()=>{document.getElementById('cpOrdProvDd').style.display='none';},150)">
+          </div>
+          <div class="cp-dd" id="cpOrdProvDd"></div>
+        </div>
         <div class="form-field"><label>Fecha</label><input type="date" id="cpOrdFecha"></div>
         <div class="form-field"><label>Nota (opcional)</label><input type="text" id="cpOrdNotas" placeholder="Ej: lo trae el martes"></div>
-      </div>
-      <div class="cp-search wide" id="cpOrdAddWrap" style="max-width:none;margin-bottom:12px;">
-        <i class="fa fa-plus"></i>
-        <input type="text" id="cpOrdAdd" placeholder="Buscar un producto para agregarlo..." autocomplete="off" oninput="cOrdBuscar(this.value)" onblur="setTimeout(()=>{document.getElementById('cpOrdAddDd').style.display='none';},150)">
-        <div class="cp-dd" id="cpOrdAddDd"></div>
       </div>
       <div class="cp-otable" id="cpOrdItems"></div>
       <div class="cp-total"><span>Total estimado</span><b id="cpOrdTotal">S/. 0.00</b></div>

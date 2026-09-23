@@ -1,0 +1,17 @@
+<!-- Modal Asignar proveedor (búsqueda + creación rápida, mismo espíritu que el buscador de cliente del POS) -->
+<div class="modal-overlay" id="modalAsignarProv">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header">
+      <h3><i class="fa fa-truck" style="color:var(--accent);margin-right:8px;"></i>Asignar proveedor</h3>
+      <div class="modal-close" onclick="closeModal('modalAsignarProv')"><i class="fa fa-xmark"></i></div>
+    </div>
+    <div class="modal-body" style="padding:16px 20px 20px;">
+      <p class="cp-ap-prod" id="cpApProd"></p>
+      <div class="cp-search" style="max-width:none;">
+        <i class="fa fa-magnifying-glass"></i>
+        <input type="text" id="cpApBuscar" placeholder="Buscar proveedor..." autocomplete="off" oninput="cAsignarProvBuscar(this.value)">
+      </div>
+      <div class="cp-ap-list" id="cpApLista"></div>
+    </div>
+  </div>
+</div>
