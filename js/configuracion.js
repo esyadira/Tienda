@@ -4,6 +4,7 @@ const _settingsDefault = {
     apariencia: { darkMode: false, colorAcento: "#f59e0b" },
     alertas:    { stock: true, minStock: 3, deuda: true, montoDeuda: 100 },
     sistema:    { moneda: "S/.", ticket: true, mensajes: true, confirmDel: true, margenAuto: true, margenPct: 20 },
+    funciones:  { fiar: true }, // Funciones opcionales del sistema que se pueden apagar/prender desde Preferencias
     pagos:      { yape: true, tarjeta: true, mixto: true },  // Efectivo siempre está activo
     ticket:     {},  // el diseño completo y sus valores por defecto están en ticket.js
     terminal:   { activo: false, proveedor: null, izipay: {}, mercadopago: {} }, // Terminal de cobro: Izipay / Mercado Pago
@@ -17,11 +18,15 @@ let settings = {
     apariencia: Object.assign({}, _settingsDefault.apariencia, _settingsRaw.apariencia || {}),
     alertas:    Object.assign({}, _settingsDefault.alertas,    _settingsRaw.alertas    || {}),
     sistema:    Object.assign({}, _settingsDefault.sistema,    _settingsRaw.sistema    || {}),
+    funciones:  Object.assign({}, _settingsDefault.funciones,  _settingsRaw.funciones  || {}),
     pagos:      Object.assign({}, _settingsDefault.pagos,      _settingsRaw.pagos      || {}),
     ticket:     Object.assign({}, _settingsDefault.ticket,     _settingsRaw.ticket     || {}),
     terminal:   Object.assign({}, _settingsDefault.terminal,   _settingsRaw.terminal   || {}),
     impresora:  Object.assign({}, _settingsDefault.impresora,  _settingsRaw.impresora  || {})
 };
+
+// Guarda cuál era el logo ya guardado, para poder borrarlo de Storage cuando se reemplaza o se quita
+let _cfgLogoAnterior = settings.negocio.logo || '';
 
 // HELPER: símbolo de moneda actual
 function moneda() { return settings.sistema.moneda || 'S/.'; }
@@ -146,7 +151,11 @@ function aplicarCambiosVisuales() {
 function inicializarAjustes() {
     // Aplicar cambios visuales SIEMPRE (header nombre + logo + color)
     aplicarCambiosVisuales();
+    aplicarFunciones();
     
+    // Recordar cuál es el logo ya guardado (para poder borrarlo de Storage si se reemplaza)
+    _cfgLogoAnterior = settings.negocio.logo || '';
+
     // Cargar previsualización del logo en el panel de configuración (si existe)
     if(settings.negocio.logo) {
         const preview = document.getElementById('preview-logo');
@@ -175,6 +184,7 @@ function inicializarAjustes() {
     safe('cfg-pago-yape', settings.pagos.yape);
     safe('cfg-pago-tarjeta', settings.pagos.tarjeta);
     safe('cfg-pago-mixto', settings.pagos.mixto);
+    safe('cfg-funcion-fiar', settings.funciones.fiar);
     if (typeof aplicarFormasPago === 'function') aplicarFormasPago();
 
     // Actualizar preview del nombre si está visible
@@ -200,12 +210,19 @@ function refrescarPaginaActiva() {
     } catch(e) { /* silencioso */ }
 }
 
-function guardarNegocio() {
+async function guardarNegocio() {
     const v = id => { const e = document.getElementById(id); return e ? e.value.trim() : ''; };
     settings.negocio.nombre = v('cfg-nombre-negocio') || 'BodegaPOS';
     settings.negocio.tel    = v('cfg-tel-negocio');
     settings.negocio.email  = v('cfg-email-negocio');
     settings.negocio.dir    = v('cfg-dir-negocio');
+    // Logo nuevo: se sube a Storage y se guarda solo el link (si no hay nube, se queda local como antes)
+    if (settings.negocio.logo && settings.negocio.logo.startsWith('data:')) {
+        const logoAnterior = _cfgLogoAnterior || '';
+        settings.negocio.logo = await sbSubirImagen(settings.negocio.logo, 'negocio');
+        if (logoAnterior && logoAnterior !== settings.negocio.logo) sbBorrarImagenAnterior(logoAnterior);
+    }
+    _cfgLogoAnterior = settings.negocio.logo || '';
     localStorage.setItem('bodega_settings', JSON.stringify(settings));
     if (typeof sbSyncDebounced === 'function') sbSyncDebounced();
     aplicarCambiosVisuales();
@@ -294,12 +311,11 @@ function guardarConfigGeneral() {
 // 4. FUNCIONES DE APOYO (Imagen, Modo Oscuro, etc)
 function leerImagenLogo(input) {
     if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = e => {
-            settings.negocio.logo = e.target.result;
-            document.getElementById('preview-logo').innerHTML = `<img src="${e.target.result}" style="width:100%; height:100%; object-fit:contain;">`;
-        };
-        reader.readAsDataURL(input.files[0]);
+        // Se reduce y comprime igual que las demás fotos; se sube a Storage recién al presionar "Guardar" en Negocio
+        comprimirImagenArchivo(input.files[0], 500, 0.8).then(dataUrl => {
+            settings.negocio.logo = dataUrl;
+            document.getElementById('preview-logo').innerHTML = `<img src="${dataUrl}" style="width:100%; height:100%; object-fit:contain;">`;
+        });
     }
 }
 
@@ -389,9 +405,14 @@ function cfgPreviewNombre(val) {
 
 function eliminarLogoNegocio() {
     if (!confirm('¿Quitar el logo del negocio y usar el ícono por defecto?')) return;
+    const logoAnterior = settings.negocio.logo;
     settings.negocio.logo = '';
+    _cfgLogoAnterior = '';
+    if (logoAnterior) sbBorrarImagenAnterior(logoAnterior);
     const preview = document.getElementById('preview-logo');
     if (preview) preview.innerHTML = '<i class="fa fa-image" style="font-size:24px;color:var(--text3);"></i>';
+    localStorage.setItem('bodega_settings', JSON.stringify(settings));
+    if (typeof sbSyncDebounced === 'function') sbSyncDebounced();
     aplicarCambiosVisuales();
     showToast('Logo eliminado', 'success');
 }
@@ -505,6 +526,7 @@ function importarBackup(input) {
             
             guardarTodoEnLocalStorage();
             localStorage.setItem('bodega_settings', JSON.stringify(settings));
+            if (typeof sbResincronizarHistorialCompleto === 'function') sbResincronizarHistorialCompleto(); // restaurar backup reemplaza todo, incluida la nube
             
             const info = document.getElementById('cfgBackupInfo');
             if(info) { info.style.display='block'; info.innerHTML=`<i class="fa fa-check-circle"></i> Datos restaurados correctamente. El Administrador actual se conservó.`; setTimeout(()=>info.style.display='none',6000); }
@@ -609,6 +631,38 @@ function toggleMargenAuto(checked) {
     settings.sistema.margenAuto = checked;
     localStorage.setItem('bodega_settings', JSON.stringify(settings));
     if (typeof sbSyncDebounced === 'function') sbSyncDebounced();
+}
+
+// --- FUNCIONES DEL SISTEMA (Preferencias > qué le muestra el sistema al usuario) ---
+// Cada función opcional oculta/muestra sus propios elementos en el menú, dashboard y demás pantallas.
+function aplicarFunciones() {
+    const on = settings.funciones.fiar;
+
+    // Menú lateral: "Clientes"
+    const navCli = document.getElementById('navClientes');
+    if (navCli) navCli.style.display = on ? '' : 'none';
+
+    // Dashboard: tarjeta "Deuda Alta"
+    const cardDeuda = document.getElementById('dashCardDeudaAlta');
+    if (cardDeuda) cardDeuda.style.display = on ? '' : 'none';
+
+    // Punto de venta: buscador de cliente + badge del cliente seleccionado
+    const posCli = document.getElementById('posClienteBuscarWrap');
+    if (posCli) posCli.style.display = on ? '' : 'none';
+
+    // Si estaban en la página de Clientes y se apagó la función, saca al usuario de ahí
+    if (!on && document.getElementById('page-clientes')?.classList.contains('active') && typeof showPage === 'function') {
+        showPage('dashboard');
+    }
+}
+
+// Handler del checkbox "Fiar a clientes" en Preferencias > Sistema
+function toggleFuncionFiar(checked) {
+    settings.funciones.fiar = checked;
+    localStorage.setItem('bodega_settings', JSON.stringify(settings));
+    if (typeof sbSyncDebounced === 'function') sbSyncDebounced();
+    aplicarFunciones();
+    if (typeof clearClientSel === 'function') clearClientSel(); // por si había un cliente elegido en el POS
 }
 
 function toggleAlertaDeuda(checked) {

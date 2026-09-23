@@ -480,7 +480,7 @@ function actualizarInfoPrecios(){
   actualizarInfoPromo();
 }
 
-function saveProduct(){
+async function saveProduct(){
   const editId = document.getElementById('editProdId').value;
   const nombre = document.getElementById('prodNombre').value || 'Producto Nuevo';
 
@@ -493,7 +493,18 @@ function saveProduct(){
   const stockMin = parseInt(document.getElementById('prodStockMin').value) || 3;
   const codigo = document.getElementById('prodBarcode').value || genCode();
   const imgEl = document.getElementById('imgPreview');
-  const img = imgEl.style.display !== 'none' ? imgEl.src : '';
+  const imgPrevia = editId ? ((productos.find(p => p.id === parseInt(editId)) || {}).img || '') : '';
+  let img = imgEl.style.display !== 'none' ? imgEl.src : '';
+  // Si es una foto nueva (recién elegida del celular/PC), se sube a Storage y se guarda solo el link.
+  // Si no hay nube conectada, sbSubirImagen devuelve la misma foto y se guarda local como antes.
+  if (img && img.startsWith('data:')) {
+    const btn = document.querySelector('#modalProducto .btn-primary');
+    const btnHtml = btn ? btn.innerHTML : '';
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Guardando foto...'; }
+    img = await sbSubirImagen(img, 'productos');
+    if (btn) { btn.disabled = false; btn.innerHTML = btnHtml; }
+  }
+  if (imgPrevia && imgPrevia !== img) sbBorrarImagenAnterior(imgPrevia);
   const unidad = document.getElementById('prodUnidad').value || 'unidad';
   const unidadesPaquete = unidad === 'paquete' ? (parseInt(document.getElementById('prodUnidadesPaquete').value) || 0) : 0;
   const fijoOn = document.getElementById('prodFijoOn').checked;
@@ -522,20 +533,21 @@ function saveProduct(){
   // Campos nuevos de precio / unidad (se usan tanto al crear como al editar)
   const extra = {unidad, esPeso: unidad === 'kg', unidadesPaquete, costo, gananciaPct, promo: promoRes.promo, precioPromo: 0, promoHasta: '', stockFijoFecha: fijoOn ? hoyISO() : undefined};
 
+  let _prodMsg = '';
   if(editId){
     const idx = productos.findIndex(p => p.id === parseInt(editId));
     if(idx > -1){
       productos[idx] = {...productos[idx], nombre, cat, precio, img, stock, stockMin, codigo, stockFijo: stockFijo || 0, desc, ...extra};
-      showToast('Producto actualizado', 'success');
+      _prodMsg = 'Producto actualizado';
     }
   } else {
     const existing = codigo ? productos.find(p => p.codigo === codigo) : null;
     if(existing){
       existing.stock += stock;
-      showToast(`Stock actualizado: ${existing.nombre}`, 'success');
+      _prodMsg = `Stock actualizado: ${existing.nombre}`;
     } else {
       productos.push({id: Date.now(), codigo, nombre, cat, stock, precio, img, estado: 'ok', stockMin, stockFijo: stockFijo || 0, desc, ...extra});
-      showToast('Producto guardado', 'success');
+      _prodMsg = 'Producto guardado';
     }
   }
 
@@ -551,7 +563,8 @@ function saveProduct(){
   renderPOSProducts();
   updateStockBajoCount();
   actualizarNotificaciones();
-  guardarTodoEnLocalStorage();
+  // El toast de éxito solo aparece si en verdad se guardó (antes se mostraba igual aunque fallara)
+  if (guardarTodoEnLocalStorage()) showToast(_prodMsg, 'success');
   renderCategoryChart();
   closeModal('modalProducto');
 }
@@ -720,8 +733,8 @@ function exportProductsExcel(){
     <tbody>
     ${productos.map((p,i)=>`<tr>
       <td>${i+1}</td>
-      <td style="font-family:monospace;font-size:11px;">${p.codigo}</td>
-      <td>${p.img?`<img src="${p.img}" width="40" height="40" style="object-fit:cover;border-radius:6px;">`:'—'}</td>
+      <td style="font-family:monospace;font-size:11px;mso-number-format:'\\@';">${p.codigo}</td>
+      <td>${p.img?'📷 Sí':'—'}</td>
       <td><strong>${p.nombre}</strong></td>
       <td>${p.cat}</td>
       <td>${unidadDe(p)==='kg'?'Granel (kg)':unidadDe(p)==='paquete'?'Paquete'+(p.unidadesPaquete?' x'+p.unidadesPaquete:''):'Unidad'}</td>

@@ -122,6 +122,7 @@ function registrarMovimientoCaja() {
     hora: now.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' }),
     usuario: _paUsuario()
   });
+  if (typeof sbGuardarRegistro === 'function') sbGuardarRegistro('movimientosCaja', movimientosCaja[movimientosCaja.length - 1]);
   guardarTodoEnLocalStorage();
 
   document.getElementById('esMonto').value = '';
@@ -611,7 +612,7 @@ function histDevolverSeleccion(ventaId) {
   }
 
   const now = new Date();
-  devolucionesHistorial.push({
+  const nuevaDevolucion = {
     id: Date.now(),
     ventaId: v.id,
     cliente: v.cliente,
@@ -621,9 +622,10 @@ function histDevolverSeleccion(ventaId) {
     fechaISO: _paHoyISO(),
     hora: now.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' }),
     usuario: _paUsuario()
-  });
+  };
+  devolucionesHistorial.push(nuevaDevolucion);
 
-  movimientosCaja.push({
+  const nuevoMovimiento = {
     id: Date.now() + 1,
     tipo: 'salida',
     monto: Math.round(montoDevuelto * 100) / 100,
@@ -632,7 +634,14 @@ function histDevolverSeleccion(ventaId) {
     fechaISO: _paHoyISO(),
     hora: now.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' }),
     usuario: _paUsuario()
-  });
+  };
+  movimientosCaja.push(nuevoMovimiento);
+
+  if (typeof sbGuardarRegistro === 'function') {
+    sbGuardarRegistro('devolucionesHistorial', nuevaDevolucion);
+    sbGuardarRegistro('movimientosCaja', nuevoMovimiento);
+    sbGuardarRegistro('ventasHistorial', v); // la venta original cambió (menos cantidad/total)
+  }
 
   guardarTodoEnLocalStorage();
   updateStockBajoCount();

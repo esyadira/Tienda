@@ -17,16 +17,37 @@ document.querySelectorAll('.modal-overlay').forEach(m=>{
 // ========================================
 // MISC
 // ========================================
+// Reduce y comprime cualquier foto (producto, vendedor, logo) a un dataURL liviano en JPEG.
+// Se usa antes de mostrarla en pantalla y antes de subirla a Storage.
+function comprimirImagenArchivo(file, maxPx=500, calidad=0.75){
+  return new Promise((resolve)=>{
+    const reader=new FileReader();
+    reader.onload=e=>{
+      const im=new Image();
+      im.onload=()=>{
+        const r=Math.min(1,maxPx/Math.max(im.width,im.height));
+        const c=document.createElement('canvas');
+        c.width=Math.max(1,Math.round(im.width*r));
+        c.height=Math.max(1,Math.round(im.height*r));
+        c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+        resolve(c.toDataURL('image/jpeg',calidad));
+      };
+      im.onerror=()=>resolve(e.target.result); // si no se pudo procesar como imagen, se usa tal cual
+      im.src=e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 function previewImg(input){
   const file=input.files[0];if(!file)return;
-  const reader=new FileReader();
-  reader.onload=e=>{
-    const img=document.getElementById('imgPreview');
-    img.src=e.target.result;img.style.display='block';
+  // Se reduce a máx. 500px y se comprime para no llenar el almacenamiento con fotos pesadas de celular
+  comprimirImagenArchivo(file,500,0.75).then(dataUrl=>{
+    const imgEl=document.getElementById('imgPreview');
+    imgEl.src=dataUrl;imgEl.style.display='block';
     const icon=document.getElementById('prodImgIcon');
     if(icon)icon.style.display='none';
-  };
-  reader.readAsDataURL(file);
+  });
 }
 
 // Stock fijo diario: cada día el producto vuelve a su cantidad fija (se haya agotado o le haya sobrado).

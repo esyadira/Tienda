@@ -76,6 +76,7 @@ function confirmarCajaInicial() {
     hora: now.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })
   };
   cajasHistorial.push(rec);
+  if (typeof sbGuardarRegistro === 'function') sbGuardarRegistro('cajasHistorial', rec);
   localStorage.setItem('bodega_caja_activa', String(rec.id));
   guardarTodoEnLocalStorage();
   _cajaCerrarYContinuar();

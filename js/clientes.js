@@ -143,6 +143,9 @@ function eliminarProductoDeCuenta(clienteId, histIdx, prodIdx) {
     // Si la venta quedó sin productos, eliminarla del historial
     if ((!ventaMatch.items || ventaMatch.items.length === 0) && (!ventaMatch.productos || ventaMatch.productos.length === 0)) {
       ventasHistorial = ventasHistorial.filter(v => v !== ventaMatch);
+      if (typeof sbBorrarRegistro === 'function') sbBorrarRegistro('ventasHistorial', ventaMatch.id);
+    } else if (typeof sbGuardarRegistro === 'function') {
+      sbGuardarRegistro('ventasHistorial', ventaMatch); // solo se resube esta venta, no todo el historial
     }
   }
 

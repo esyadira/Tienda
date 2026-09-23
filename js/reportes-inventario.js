@@ -201,6 +201,7 @@ function limpiarFiltrosReportes() {
 function limpiarHistorialVentas() {
   if(!cfgConfirm('¿Limpiar todo el historial de ventas? Esta acción no se puede deshacer.')) return;
   ventasHistorial = [];
+  if (typeof sbVaciarTablaHistorial === 'function') sbVaciarTablaHistorial('ventasHistorial');
   guardarTodoEnLocalStorage();
   actualizarDashboardReal();
   renderReportes('rep-cerveza');

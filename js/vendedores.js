@@ -44,12 +44,12 @@ function selectTurno(el,t){
   el.classList.add('selected');selectedTurno=t;
 }
 
-function addVendedor(){
+async function addVendedor(){
   const nombre=document.getElementById('vNombre').value.trim()||'Vendedor';
   const apellido=document.getElementById('vApellido').value.trim()||'Nuevo';
   const usuario=document.getElementById('vUsuario').value.trim()||'user'+Date.now();
   const password=document.getElementById('vPassword').value;
-  const foto=document.getElementById('vFotoImg').src && document.getElementById('vFotoImg').style.display!=='none'
+  let foto=document.getElementById('vFotoImg').src && document.getElementById('vFotoImg').style.display!=='none'
     ? document.getElementById('vFotoImg').src : '';
   
   if(!password || password.length < 4){
@@ -60,6 +60,9 @@ function addVendedor(){
     showToast('Ya existe un usuario con ese nombre de usuario','error');
     return;
   }
+
+  // Foto nueva: se sube a Storage y solo se guarda el link (si no hay nube, se guarda local como antes)
+  if (foto && foto.startsWith('data:')) foto = await sbSubirImagen(foto, 'vendedores');
   
   const perms=[];
   ['Dashboard','Punto de Venta','Productos','Clientes','Proveedores','Reportes','Vendedores','Configuración'].forEach((p,i)=>{
@@ -113,7 +116,7 @@ function editVendedor(id) {
   openModal('modalVendedor');
 }
 
-function guardarEditVendedor(id) {
+async function guardarEditVendedor(id) {
   const v = vendedores.find(x=>x.id===id); if(!v) return;
   const nuevoUsuario = document.getElementById('vUsuario').value.trim();
   const nuevaPass = document.getElementById('vPassword').value;
@@ -145,9 +148,12 @@ function guardarEditVendedor(id) {
   v.usuario = nuevoUsuario||v.usuario;
   v.telefono = document.getElementById('vTelefono').value.trim();
   if(nuevaPass && nuevaPass.length>=4) v.password = nuevaPass;
-  // Foto
+  // Foto: si es nueva (recién elegida) se sube a Storage y se guarda solo el link
   const fotoImg = document.getElementById('vFotoImg');
-  v.foto = (fotoImg && fotoImg.style.display!=='none' && fotoImg.src) ? fotoImg.src : '';
+  const fotoNueva = (fotoImg && fotoImg.style.display!=='none' && fotoImg.src) ? fotoImg.src : '';
+  const fotoAnterior = v.foto || '';
+  v.foto = fotoNueva.startsWith('data:') ? await sbSubirImagen(fotoNueva, 'vendedores') : fotoNueva;
+  if (fotoAnterior && fotoAnterior !== v.foto) sbBorrarImagenAnterior(fotoAnterior);
   const permsNombres=['Dashboard','Punto de Venta','Productos','Clientes','Proveedores','Reportes','Vendedores','Configuración'];
   v.permisos = permsNombres.filter((p,i)=>document.getElementById('p'+(i+1))?.checked);
   renderVendedores();
@@ -170,14 +176,13 @@ function toggleEstadoVendedor(id) {
 
 function previewVendFoto(input) {
   if (!input.files || !input.files[0]) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    document.getElementById('vFotoImg').src = e.target.result;
+  // Se reduce y comprime igual que las fotos de producto, para no llenar de fotos pesadas
+  comprimirImagenArchivo(input.files[0], 500, 0.75).then(dataUrl => {
+    document.getElementById('vFotoImg').src = dataUrl;
     document.getElementById('vFotoImg').style.display = 'block';
     document.getElementById('vFotoIcon').style.display = 'none';
     document.getElementById('vFotoQuitarBtn').style.display = 'block';
-  };
-  reader.readAsDataURL(input.files[0]);
+  });
 }
 
 function quitarFotoVend() {

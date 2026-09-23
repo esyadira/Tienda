@@ -11,6 +11,214 @@ function sbGetConfig() {
   try { return JSON.parse(localStorage.getItem('bodega_supabase_cfg') || 'null'); } catch { return null; }
 }
 
+// ========================================
+// IMÁGENES EN SUPABASE STORAGE
+// En vez de guardar las fotos como texto base64 dentro de bodega_sync.datos
+// (lo que hace que CADA sincronización reenvíe todas las fotos de nuevo),
+// se sube el archivo a un bucket de Storage y solo se guarda el link corto.
+// Requiere crear en el proyecto de Supabase un bucket público llamado "imagenes".
+// ========================================
+const SB_BUCKET_IMAGENES = 'imagenes';
+
+// Sube una imagen (dataURL "data:image/...") a Storage y devuelve la URL pública.
+// Si no hay nube conectada, o si algo falla, devuelve la misma dataURL tal cual
+// (se guarda localmente como antes, no se pierde la foto).
+async function sbSubirImagen(dataUrl, carpeta) {
+  if (!dataUrl || !dataUrl.startsWith('data:')) return dataUrl; // ya es un link o está vacío
+  if (!_supabase || !_sbConectado) return dataUrl;
+  const cfg = sbGetConfig();
+  if (!cfg) return dataUrl;
+  try {
+    const res = await fetch(dataUrl);
+    const blob = await res.blob();
+    const ruta = `${cfg.tienda}/${carpeta}/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.jpg`;
+    const { error } = await _supabase.storage.from(SB_BUCKET_IMAGENES).upload(ruta, blob, { contentType: 'image/jpeg', upsert: true });
+    if (error) throw error;
+    const { data } = _supabase.storage.from(SB_BUCKET_IMAGENES).getPublicUrl(ruta);
+    return data.publicUrl;
+  } catch (e) {
+    console.warn('No se pudo subir la imagen a Storage, se guarda solo en este dispositivo:', e.message);
+    return dataUrl;
+  }
+}
+
+// Borra del Storage una imagen anterior cuando se reemplaza o se quita, para no dejar basura acumulándose.
+async function sbBorrarImagenAnterior(url) {
+  if (!url || !url.startsWith('http') || !_supabase || !_sbConectado) return;
+  const cfg = sbGetConfig();
+  if (!cfg || !url.includes('/' + SB_BUCKET_IMAGENES + '/')) return;
+  try {
+    const marcador = '/object/public/' + SB_BUCKET_IMAGENES + '/';
+    const idx = url.indexOf(marcador);
+    if (idx === -1) return;
+    const ruta = decodeURIComponent(url.substring(idx + marcador.length));
+    await _supabase.storage.from(SB_BUCKET_IMAGENES).remove([ruta]);
+  } catch (e) { /* no es crítico si falla el borrado */ }
+}
+
+// ========================================
+// HISTORIAL EN TABLAS SEPARADAS (ventas, cajas, movimientos, devoluciones, pagos a proveedores)
+// Antes, CADA vez que se guardaba cualquier cosa, se reenviaba TODO el historial completo
+// dentro de bodega_sync.datos. Ahora cada venta/caja/movimiento/devolución/pago vive como
+// una FILA independiente en su propia tabla: al agregar uno nuevo, solo se sube ESE registro.
+// Requiere crear estas tablas en el proyecto de Supabase (ver instrucciones aparte).
+// ========================================
+const SB_TABLA_HISTORIAL = {
+  ventasHistorial: 'bodega_ventas',
+  cajasHistorial: 'bodega_cajas',
+  movimientosCaja: 'bodega_movimientos',
+  devolucionesHistorial: 'bodega_devoluciones',
+  pagosProveedoresHistorial: 'bodega_pagos_proveedores'
+};
+
+// Sube o actualiza UN registro del historial en su propia tabla (no toca el resto).
+function sbEncolarPendienteHistorial(clave, registro, borrar) {
+  let cola = [];
+  try { cola = JSON.parse(localStorage.getItem('bodega_historial_pendiente') || '[]'); } catch(e) {}
+  cola = cola.filter(x => !(x.clave === clave && x.registro && registro && x.registro.id === registro.id));
+  cola.push({ clave, registro, borrar: !!borrar });
+  localStorage.setItem('bodega_historial_pendiente', JSON.stringify(cola));
+}
+
+async function sbGuardarRegistro(clave, registro, _sinReintento) {
+  const tabla = SB_TABLA_HISTORIAL[clave];
+  if (!tabla || !registro || registro.id == null) return false;
+  if (!_supabase || !_sbConectado) { if (!_sinReintento) sbEncolarPendienteHistorial(clave, registro); return false; }
+  const cfg = sbGetConfig();
+  if (!cfg) return false;
+  try {
+    const { error } = await _supabase.from(tabla).upsert({ tienda: cfg.tienda, id: registro.id, datos: registro }, { onConflict: 'tienda,id' });
+    if (error) throw error;
+    return true;
+  } catch (e) {
+    console.warn(`No se pudo subir el registro a ${tabla}:`, e.message);
+    if (!_sinReintento) sbEncolarPendienteHistorial(clave, registro);
+    return false;
+  }
+}
+
+// Borra UN registro de su tabla (ej: se eliminó una venta o un movimiento de caja)
+async function sbBorrarRegistro(clave, id) {
+  const tabla = SB_TABLA_HISTORIAL[clave];
+  if (!tabla || id == null) return;
+  if (!_supabase || !_sbConectado) { sbEncolarPendienteHistorial(clave, { id }, true); return; }
+  const cfg = sbGetConfig();
+  if (!cfg) return;
+  try { await _supabase.from(tabla).delete().eq('tienda', cfg.tienda).eq('id', id); }
+  catch (e) { console.warn(`No se pudo borrar de ${tabla}:`, e.message); }
+}
+
+// Sube lo que quedó pendiente por falta de internet (se llama al reconectar)
+async function sbSubirPendientesHistorial() {
+  if (!_supabase || !_sbConectado) return;
+  let cola = [];
+  try { cola = JSON.parse(localStorage.getItem('bodega_historial_pendiente') || '[]'); } catch(e) {}
+  if (!cola.length) return;
+  const restantes = [];
+  for (const item of cola) {
+    if (item.borrar) { await sbBorrarRegistro(item.clave, item.registro && item.registro.id); continue; }
+    const ok = await sbGuardarRegistro(item.clave, item.registro, true);
+    if (!ok) restantes.push(item);
+  }
+  localStorage.setItem('bodega_historial_pendiente', JSON.stringify(restantes));
+  if (cola.length && restantes.length === 0) showToast('Historial pendiente subido a la nube ☁️', 'success');
+}
+
+// Trae TODO el historial de una tabla (se usa al abrir la app, no en cada guardado)
+async function sbCargarHistorial(clave) {
+  const tabla = SB_TABLA_HISTORIAL[clave];
+  const cfg = sbGetConfig();
+  if (!tabla || !cfg) return null;
+  try {
+    const { data, error } = await _supabase.from(tabla).select('datos').eq('tienda', cfg.tienda).order('id', { ascending: true });
+    if (error) throw error;
+    return (data || []).map(r => r.datos);
+  } catch (e) { console.warn(`No se pudo cargar ${tabla}:`, e.message); return null; }
+}
+
+async function sbCargarTodoElHistorial() {
+  for (const clave of Object.keys(SB_TABLA_HISTORIAL)) {
+    const datos = await sbCargarHistorial(clave);
+    if (datos === null) continue; // error de red: se deja lo local, no se borra nada
+    if (clave === 'ventasHistorial') ventasHistorial = datos;
+    else if (clave === 'cajasHistorial') cajasHistorial = datos;
+    else if (clave === 'movimientosCaja') movimientosCaja = datos;
+    else if (clave === 'devolucionesHistorial') devolucionesHistorial = datos;
+    else if (clave === 'pagosProveedoresHistorial') pagosProveedoresHistorial = datos;
+  }
+}
+
+// Borra todas las filas de una tabla para esta tienda (solo se usa al limpiar historial a propósito)
+async function sbVaciarTablaHistorial(clave) {
+  const tabla = SB_TABLA_HISTORIAL[clave];
+  if (!tabla || !_supabase || !_sbConectado) return;
+  const cfg = sbGetConfig();
+  if (!cfg) return;
+  try { await _supabase.from(tabla).delete().eq('tienda', cfg.tienda); }
+  catch (e) { console.warn(`No se pudo vaciar ${tabla}:`, e.message); }
+}
+
+// Reemplaza TODO el historial en la nube por el que hay localmente ahora mismo.
+// Solo se usa al restaurar un backup completo (acción rara y explícita del usuario);
+// para el uso normal del día a día están sbGuardarRegistro/sbBorrarRegistro, que
+// solo suben o borran el registro puntual que cambió.
+async function sbResincronizarHistorialCompleto() {
+  if (!_supabase || !_sbConectado) return;
+  const cfg = sbGetConfig();
+  if (!cfg) return;
+  const fuentes = { ventasHistorial, cajasHistorial, movimientosCaja, devolucionesHistorial, pagosProveedoresHistorial };
+  try {
+    for (const clave of Object.keys(fuentes)) {
+      const tabla = SB_TABLA_HISTORIAL[clave];
+      await _supabase.from(tabla).delete().eq('tienda', cfg.tienda);
+      const lista = (fuentes[clave] || []).filter(r => r);
+      for (let i = 0; i < lista.length; i += 200) {
+        const tanda = lista.slice(i, i + 200).map((r, j) => ({ tienda: cfg.tienda, id: r.id != null ? r.id : (Date.now() + i + j), datos: r }));
+        if (tanda.length) await _supabase.from(tabla).upsert(tanda, { onConflict: 'tienda,id' });
+      }
+    }
+  } catch (e) { console.warn('No se pudo resincronizar el historial completo:', e.message); }
+}
+
+// Migración única: la primera vez que se conecta con este código nuevo, si las tablas
+// de historial están vacías, copia lo que había en bodega_sync.datos (ventas, cajas y
+// pagos a proveedores viejos) y lo que hay en localStorage (movimientos y devoluciones,
+// que antes nunca se subían a la nube) hacia las tablas nuevas. Después de esto, ya no
+// se vuelve a reenviar todo junto.
+async function sbMigrarHistorialSiHaceFalta() {
+  if (!_supabase || !_sbConectado) return;
+  if (localStorage.getItem('bodega_historial_migrado_v2') === '1') return;
+  const cfg = sbGetConfig();
+  if (!cfg) return;
+  try {
+    const { count } = await _supabase.from('bodega_ventas').select('id', { count: 'exact', head: true }).eq('tienda', cfg.tienda);
+    if (count && count > 0) { localStorage.setItem('bodega_historial_migrado_v2', '1'); return; }
+
+    const { data } = await _supabase.from('bodega_sync').select('datos').eq('tienda', cfg.tienda).single();
+    let viejo = {};
+    try { viejo = data && data.datos ? JSON.parse(data.datos) : {}; } catch(e) {}
+
+    const fuentes = {
+      ventasHistorial: (viejo.ventasHistorial && viejo.ventasHistorial.length ? viejo.ventasHistorial : ventasHistorial) || [],
+      cajasHistorial: (viejo.cajasHistorial && viejo.cajasHistorial.length ? viejo.cajasHistorial : cajasHistorial) || [],
+      pagosProveedoresHistorial: (viejo.pagosProveedoresHistorial && viejo.pagosProveedoresHistorial.length ? viejo.pagosProveedoresHistorial : pagosProveedoresHistorial) || [],
+      movimientosCaja: movimientosCaja || [],
+      devolucionesHistorial: devolucionesHistorial || []
+    };
+
+    for (const clave of Object.keys(fuentes)) {
+      const tabla = SB_TABLA_HISTORIAL[clave];
+      const lista = fuentes[clave].filter(r => r);
+      for (let i = 0; i < lista.length; i += 200) {
+        const tanda = lista.slice(i, i + 200).map((r, j) => ({ tienda: cfg.tienda, id: r.id != null ? r.id : (Date.now() + i + j), datos: r }));
+        if (tanda.length) await _supabase.from(tabla).upsert(tanda, { onConflict: 'tienda,id' });
+      }
+    }
+    localStorage.setItem('bodega_historial_migrado_v2', '1');
+    console.log('[BodegaPOS] Historial migrado a tablas separadas ✓');
+  } catch (e) { console.warn('No se pudo migrar el historial:', e.message); }
+}
+
 async function sbInicializar() {
   const cfg = sbGetConfig();
   if (!cfg || !cfg.url || !cfg.key || !cfg.tienda) return;
@@ -20,7 +228,9 @@ async function sbInicializar() {
     if (error && error.code !== 'PGRST116' && error.code !== '42P01') throw error;
     _sbConectado = true;
     sbActualizarIndicador(true);
-    await sbCargarDesdeNube();
+    await sbMigrarHistorialSiHaceFalta(); // solo la primera vez con este código nuevo
+    await sbCargarDesdeNube(false); // arranque automático: respeta lo que se hizo sin internet
+    await sbSubirPendientesHistorial(); // sube ventas/cajas/etc. que quedaron pendientes sin internet
     console.log('Supabase conectado OK');
   } catch(e) {
     _sbConectado = false;
@@ -46,38 +256,52 @@ async function sbGuardarEnNube() {
   if (!_supabase || !_sbConectado) return;
   const cfg = sbGetConfig();
   if (!cfg) return;
+  // El historial (ventas, cajas, movimientos, devoluciones, pagos a proveedores) YA NO va aquí:
+  // cada uno se sube solo (una fila) apenas se crea, con sbGuardarRegistro. Aquí solo va lo que
+  // cambia por edición completa (catálogo y ajustes), que es mucho más liviano.
   const payload = {
     tienda: cfg.tienda,
-    datos: JSON.stringify({ productos, clientes, proveedores, vendedores, ventasHistorial, pagosProveedoresHistorial, categorias, cajasHistorial, ordenesCompra, listaCompras }),
+    datos: JSON.stringify({ productos, clientes, proveedores, vendedores, categorias, ordenesCompra, listaCompras }),
     settings: localStorage.getItem('bodega_settings') || '{}',
     updated_at: new Date().toISOString()
   };
   try {
     const { error } = await _supabase.from('bodega_sync').upsert(payload, { onConflict: 'tienda' });
     if (error) throw error;
+    localStorage.removeItem('bodega_sb_pendiente');
     const ind = document.getElementById('sbLastSync');
     if (ind) ind.textContent = 'Última sync: ' + new Date().toLocaleTimeString('es-PE');
   } catch(e) { console.warn('Error guardando en nube:', e.message); }
 }
 
-async function sbCargarDesdeNube() {
+async function sbCargarDesdeNube(forzar = true) {
   if (!_supabase || !_sbConectado) return;
   const cfg = sbGetConfig();
   if (!cfg) return;
+  // Trabajaste sin internet: lo local es lo más nuevo. Se sube a la nube en vez de bajar y pisarlo.
+  if (!forzar && localStorage.getItem('bodega_sb_pendiente') === '1') {
+    console.warn('[BodegaPOS] Hay cambios hechos sin internet. Subiendo a la nube...');
+    await sbGuardarEnNube();
+    if (localStorage.getItem('bodega_sb_pendiente') !== '1') showToast('Cambios hechos sin internet subidos a la nube ☁️', 'success');
+    return;
+  }
   try {
-    const { data, error } = await _supabase.from('bodega_sync').select('datos,settings').eq('tienda', cfg.tienda).single();
+    const { data, error } = await _supabase.from('bodega_sync').select('datos,settings,updated_at').eq('tienda', cfg.tienda).single();
     if (error || !data) return;
     const d = JSON.parse(data.datos);
 
-    // ── Protección: solo sobrescribir si la nube tiene IGUAL O MÁS datos ──
-    // Comparamos la cantidad de productos (el dato más crítico).
-    // Si local tiene más productos que la nube, NO pisamos — la nube está desactualizada.
-    const prodLocales = productos ? productos.length : 0;
-    const prodNube   = (d.productos && Array.isArray(d.productos)) ? d.productos.length : 0;
-    if (prodLocales > prodNube) {
-      // La nube está desactualizada: guardar local en nube en vez de pisar
-      console.warn(`[BodegaPOS] Nube tiene ${prodNube} productos pero local tiene ${prodLocales}. Subiendo local a la nube...`);
-      showToast(`Nube desactualizada (${prodNube} vs ${prodLocales} productos). Subiendo datos locales...`, 'warning');
+    // ── Protección: solo sobrescribir si la nube es MÁS NUEVA que lo local ──
+    // Antes se comparaba solo la CANTIDAD de productos, lo que podía pisar cambios
+    // reales sin avisar (ej: si borrabas 2 productos y agregabas 2 nuevos el mismo
+    // día, la cantidad total no cambiaba y la nube igual pisaba lo local).
+    // Ahora comparamos POR FECHA: cuándo se guardó por última vez en este
+    // dispositivo vs. cuándo se guardó por última vez en la nube.
+    const ultimaLocal = localStorage.getItem('bodega_ultima_modificacion_local');
+    const ultimaNube = data.updated_at;
+    if (ultimaLocal && ultimaNube && new Date(ultimaLocal) > new Date(ultimaNube)) {
+      // Lo local es más nuevo que la nube: NO pisar, subir en vez de bajar
+      console.warn(`[BodegaPOS] Local (${ultimaLocal}) es más nuevo que la nube (${ultimaNube}). Subiendo local a la nube...`);
+      showToast('Tenías cambios más recientes en este dispositivo. Subiendo a la nube...', 'warning');
       await sbGuardarEnNube();
       return;
     }
@@ -88,13 +312,10 @@ async function sbCargarDesdeNube() {
     if (d.ordenesCompra) ordenesCompra = d.ordenesCompra;
     if (d.listaCompras) listaCompras = d.listaCompras;
     if (d.vendedores) vendedores = d.vendedores;
-    if (d.ventasHistorial) ventasHistorial = d.ventasHistorial;
-    if (d.pagosProveedoresHistorial) pagosProveedoresHistorial = d.pagosProveedoresHistorial;
     if (d.categorias) categorias = d.categorias;
-    if (d.cajasHistorial) {
-      const ids = new Set(cajasHistorial.map(c => c.id));
-      d.cajasHistorial.forEach(c => { if (!ids.has(c.id)) cajasHistorial.push(c); });
-    }
+    // El historial ya no viaja dentro de este blob: cada tabla se trae por separado
+    // (no pesa el guardado normal, solo se descarga completo al abrir la app).
+    await sbCargarTodoElHistorial();
     if (data.settings) {
       localStorage.setItem('bodega_settings', data.settings);
       try {
@@ -125,6 +346,7 @@ async function sbCargarDesdeNube() {
 
 function sbSyncDebounced() {
   if (_sbSkipSync) return; // No sincronizar si estamos cargando desde la nube
+  if (sbGetConfig()) localStorage.setItem('bodega_sb_pendiente', '1'); // queda pendiente hasta que se suba con éxito
   clearTimeout(_sbSyncTimeout);
   _sbSyncTimeout = setTimeout(() => sbGuardarEnNube(), 1500);
 }
@@ -196,3 +418,9 @@ function sbRenderCfgPanel() {
       <button class="btn btn-primary" onclick="sbConectarManual()" style="width:100%;"><i class="fa fa-cloud-arrow-up"></i> Conectar con Supabase</button>`;
   }
 }
+
+// Al volver el internet, reconecta y sube lo que se hizo sin conexión
+window.addEventListener('online', () => {
+  if (sbGetConfig() && !_sbConectado) sbInicializar();
+  else if (_sbConectado) sbSubirPendientesHistorial();
+});

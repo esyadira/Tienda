@@ -8,6 +8,7 @@
 //                 estado: 'pendiente' | 'recibida' | 'cancelada'
 //                 item:   {prodId, nombre, cant, factor, costo}
 //                         cant × factor = unidades que entran al stock, costo = precio por presentación
+//                         tipo (opcional): 'unid' | 'paq' | 'media' (1/2 docena) | 'doc'
 //   listaCompras  [{id, prodId, nombre, cant}]
 //   producto.proveedor = nombre del proveedor que lo surte (texto, como ya usaba la app)
 // ========================================
@@ -28,7 +29,9 @@ const _cF = {
 };
 const _cSel = new Set();   // productos marcados en Sugeridas
 const _cQty = {};          // cantidades editadas en la tabla de Comprar
-const _cCosto = {};        // costo nuevo editado en la tabla de Comprar
+const _cCosto = {};        // precio (por presentación) editado en la tabla de Comprar
+const _cTipo = {};         // presentación elegida en la tabla de Comprar: {t:'unid'|'paq'|'media'|'doc', f: unidades por paquete}
+const CP_TIPOS = { unid: ['Unid.', 1], paq: ['Paq.', 0], media: ['1/2 Doc.', 6], doc: ['Doc.', 12] };
 let _cGrupos = [];         // grupos visibles en Lista de compras
 let _cUlt = 0;
 
@@ -181,17 +184,24 @@ function cIrTab(id) { _cTab = id; cRefrescarTabs(); cRenderPanel(); }
 
 function cRenderPanel() {
   cId('cpFoot').innerHTML = '';
+  const panel = cId('cpPanel');
+  if (panel) panel.classList.toggle('cp-flat', _cTab === 'compra');
   ({ compra: cPanelCompra, ord: cPanelOrd, prov: cPanelProv, hist: cPanelHist })[_cTab]();
 }
 
 // ========================================
 // 1) COMPRAR — tabla de productos (derecha) + lista de compras (izquierda)
 // ========================================
-function cListaAgregar(prodId, cant, costo) {
+function cListaAgregar(prodId, cant, costo, factor, tipo) {
   const p = cProd(prodId);
+  factor = factor > 0 ? factor : 1; tipo = tipo || 'unid';
   const ex = listaCompras.find(x => x.prodId === prodId);
-  if (ex) { ex.cant = cNum(ex.cant) + cant; if (costo != null) ex.costo = costo; }
-  else listaCompras.push({ id: cNuevoId(), prodId, nombre: p ? p.nombre : '', cant, costo: costo != null ? costo : (p ? +p.costo || 0 : 0) });
+  if (ex) {
+    if ((ex.factor || 1) === factor) ex.cant = cNum(ex.cant) + cant; else ex.cant = cant;   // otra presentación: no se suman peras con manzanas
+    ex.factor = factor; ex.tipo = tipo;
+    if (costo != null) ex.costo = costo;
+  }
+  else listaCompras.push({ id: cNuevoId(), prodId, nombre: p ? p.nombre : '', cant, factor, tipo, costo: costo != null ? costo : (p ? (+p.costo || 0) * factor : 0) });
 }
 function cItCosto(f) { return f.it.costo != null ? cNum(f.it.costo) : (f.p ? +f.p.costo || 0 : 0); }
 
@@ -208,13 +218,14 @@ function cDdHtml(res, fn) {
 function cPanelCompra() {
   const f = _cF.sug;
   const cats = [...new Set([...(categorias || []), ...productos.map(p => p.cat).filter(Boolean)])].sort((a, b) => String(a).localeCompare(String(b)));
-  cId('cpToolbar').innerHTML = `
-    <div class="cp-search"><i class="fa fa-magnifying-glass"></i><input type="text" placeholder="Buscar producto o código..." value="${cEsc(f.q)}" oninput="_cF.sug.q=this.value;cCompraTablaRender()"></div>
-    <select class="cp-select" onchange="_cF.sug.cat=this.value;cCompraTablaRender()"><option value="">Todos los departamentos</option>${cats.map(c => `<option value="${cEsc(c)}"${c === f.cat ? ' selected' : ''}>${cEsc(c)}</option>`).join('')}</select>
-    <span class="cp-hint"><i class="fa fa-circle-info"></i> Se muestra primero lo que está bajo su mínimo o se agota pronto</span>`;
+  cId('cpToolbar').innerHTML = '';
   cId('cpBody').innerHTML = `<div class="cp-compra">
     <div class="cp-ctbl">
-      <div class="cp-ct-head"><span>Producto</span><span>Stock</span><span>Costo</span><span>Proveedor</span><span>Cant.</span><span></span></div>
+      <div class="cp-ct-toolbar">
+        <div class="cp-search" style="max-width:320px;"><i class="fa fa-magnifying-glass"></i><input type="text" placeholder="Buscar producto o código..." value="${cEsc(f.q)}" oninput="_cF.sug.q=this.value;cCompraTablaRender()"></div>
+        <select class="cp-select" onchange="_cF.sug.cat=this.value;cCompraTablaRender()"><option value="">Todas las categorías</option>${cats.map(c => `<option value="${cEsc(c)}"${c === f.cat ? ' selected' : ''}>${cEsc(c)}</option>`).join('')}</select>
+      </div>
+      <div class="cp-ct-head"><span>Producto</span><span>Stock</span><span>Costo</span><span>Precio</span><span>Cant.</span><span>Tipo</span><span></span></div>
       <div class="cp-ct-rows" id="cpCtRows"></div>
     </div>
     <aside class="cp-cl" id="cpCl"></aside>
@@ -255,19 +266,35 @@ function cCompraFila(s) {
   const chip = s.estado === 'agotado' ? ['red', 'Agotado'] : s.estado === 'bajo' ? ['orange', 'Bajo mínimo'] : s.estado === 'pronto' ? ['yellow', 'Se agota pronto'] : null;
   const img = p.img ? `<img src="${cEsc(p.img)}" alt="">` : '<i class="fa fa-image"></i>';
   const costoAnt = +p.costo || 0;
-  const costoVal = _cCosto[id] !== undefined ? _cCosto[id] : costoAnt;
+  const tp = cTipoDe(id);
+  const costoVal = _cCosto[id] !== undefined ? _cCosto[id] : '';
   return `<div class="cp-ct-row" id="cpCr_${id}">
     <div class="cp-prod"><div class="cp-thumb">${img}</div><div class="cp-prod-t"><b>${cEsc(p.nombre)}</b><span>${chip ? `<em class="cp-chip ${chip[0]}">${chip[1]}</em>` : ''}${p.codigo ? cEsc(p.codigo) : ''}</span></div></div>
     <span class="cp-ct-stock${chip ? ' ' + chip[0] : ''}">${cFmt(s.stock)}</span>
+    <span class="cp-ct-costo-ant" title="Costo con el que está registrado ahora">${costoAnt > 0 ? cMon(costoAnt) : '—'}</span>
     <div class="cp-ct-costo">
-      <input type="number" min="0" step="0.01" value="${cFmt(costoVal)}" id="cpCc_${id}" onchange="cCompraCosto(${id},this.value)" title="Lo que te está costando ahora">
-      ${costoAnt > 0 ? `<small>antes ${cMon(costoAnt)}</small>` : ''}
+      <input type="number" min="0" step="0.01" value="${costoVal === '' ? '' : cFmt(costoVal)}" placeholder="0.00" id="cpCc_${id}" onchange="cCompraCosto(${id},this.value)" title="Precio de lo que estás comprando: si es Unidad, el precio de una; si es Paquete/Docena/1&#47;2 Docena, el precio de todo el paquete/docena. Tú lo escribes, no se calcula solo.">
     </div>
-    <select class="cp-select sm" onchange="cCompraProv(${id},this.value)">${cOpcionesProv(p.proveedor || '', '¿Dónde lo compro?')}</select>
     <input class="cp-qty sm" type="number" min="1" step="1" value="${cCompraQtyDe(s)}" id="cpCq_${id}" onchange="cCompraQty(${id},this.value)">
+    <div class="cp-ct-tipo">
+      <select class="cp-select sm" onchange="cCompraTipo(${id},this.value)" title="Cómo te lo venden">${Object.keys(CP_TIPOS).map(k => `<option value="${k}"${k === tp.t ? ' selected' : ''}>${CP_TIPOS[k][0]}</option>`).join('')}</select>
+      <input class="cp-qty sm cp-ct-fac" type="number" min="1" step="1" placeholder="unid." id="cpCf_${id}" value="${tp.t === 'paq' ? cEsc(tp.f) : ''}" style="${tp.t === 'paq' ? '' : 'display:none;'}" oninput="cCompraFactor(${id},this.value)" title="Unidades que trae cada paquete">
+    </div>
     <button class="cp-ct-add" title="Añadir a la lista de compras" onclick="cCompraAgregar(${id})"><i class="fa fa-plus"></i></button>
   </div>`;
 }
+function cTipoDe(id) { return _cTipo[id] || { t: 'unid', f: '' }; }
+function cFactorDe(id) {
+  const t = cTipoDe(id);
+  return t.t === 'paq' ? Math.max(0, Math.floor(cNum(t.f))) : CP_TIPOS[t.t][1];
+}
+// El precio nunca se calcula solo: ella lo escribe a mano (depende del tipo elegido — ver arriba).
+function cCompraTipo(id, t) {
+  _cTipo[id] = { t, f: cTipoDe(id).f };
+  const w = cId('cpCf_' + id);
+  if (w) { w.style.display = t === 'paq' ? '' : 'none'; if (t === 'paq') w.focus(); }
+}
+function cCompraFactor(id, v) { _cTipo[id] = { t: 'paq', f: v }; }
 function cCompraQty(id, v) { _cQty[id] = Math.max(1, Math.ceil(cNum(v)) || 1); }
 function cCompraCosto(id, v) { _cCosto[id] = Math.max(0, cNum(v)); }
 function cCompraProv(id, v) {
@@ -278,8 +305,19 @@ function cCompraAgregar(id) {
   const p = cProd(id); if (!p) return;
   const qi = cId('cpCq_' + id), ci = cId('cpCc_' + id);
   const cant = Math.max(1, Math.ceil(cNum(qi ? qi.value : 1)) || 1);
-  const costo = ci && ci.value !== '' ? Math.max(0, cNum(ci.value)) : (+p.costo || 0);
-  cListaAgregar(id, cant, costo);
+  const tipo = cTipoDe(id).t, factor = cFactorDe(id);
+  if (tipo === 'paq' && factor < 1) {
+    showToast('Indica cuántas unidades trae el paquete', 'error');
+    const w = cId('cpCf_' + id); if (w) w.focus();
+    return;
+  }
+  if (!ci || ci.value === '') {
+    showToast('Escribe el precio antes de añadir', 'error');
+    if (ci) ci.focus();
+    return;
+  }
+  const costo = Math.max(0, cNum(ci.value));
+  cListaAgregar(id, cant, costo, factor || 1, tipo);
   delete _cQty[id]; delete _cCosto[id];
   cGuardar(); cRefrescarTabs(); cCompraListaRender();
   const row = cId('cpCr_' + id);
@@ -302,15 +340,14 @@ function cCompraListaRender() {
   col.innerHTML = `
     <div class="cp-cl-head"><b><i class="fa fa-list-check"></i> Lista de compras</b><span>${listaCompras.length} producto${listaCompras.length !== 1 ? 's' : ''}</span><button class="cp-cl-clear" onclick="cListaVaciar()" title="Vaciar lista"><i class="fa fa-broom"></i></button></div>
     <div class="cp-cl-body">${_cGrupos.map((gr, gi) => {
-      const pv = cProvPorNombre(gr.prov);
-      const est = gr.filas.reduce((a, f) => a + cNum(f.it.cant) * cItCosto(f), 0);
       return `<section class="cp-group">
-        <header>${cAvatar(gr.prov, pv && pv.img)}<div class="cp-group-t"><b>${gr.prov ? cEsc(gr.prov) : 'Sin proveedor'}</b><small>${gr.filas.length} producto${gr.filas.length !== 1 ? 's' : ''}${est > 0 ? ' · aprox. ' + cMon(est) : ''}</small></div>
-          ${multi ? `<div class="cp-group-a"><div class="icon-btn" title="Enviar por WhatsApp" onclick="cListaWA(${gi})"><i class="fa-brands fa-whatsapp"></i></div><div class="icon-btn" title="Crear orden" onclick="cListaOrden(${gi})"><i class="fa fa-file-invoice"></i></div></div>` : ''}</header>
-        ${gr.filas.map(f => `<div class="cp-lrow"><div class="cp-lname"><b>${cEsc(f.p ? f.p.nombre : f.it.nombre)}</b><small>${f.p ? 'Stock ' + cFmt(f.p.stock || 0) : 'Producto eliminado'}${cItCosto(f) > 0 ? ' · ' + cMon(cItCosto(f)) + ' c/u' : ''}</small></div>
-          ${gr.prov || !f.p ? '' : `<select class="cp-select sm" onchange="cAsignarProv(${f.p.id},this.value)">${cOpcionesProv('', 'Asignar proveedor...')}</select>`}
+        ${(gr.prov || multi) ? `<header><span class="cp-group-name">${gr.prov ? cEsc(gr.prov) : ''}</span>
+          ${multi ? `<div class="cp-group-a"><div class="icon-btn" title="Enviar por WhatsApp" onclick="cListaWA(${gi})"><i class="fa-brands fa-whatsapp"></i></div><div class="icon-btn" title="Crear orden" onclick="cListaOrden(${gi})"><i class="fa fa-file-invoice"></i></div></div>` : ''}</header>` : ''}
+        ${gr.filas.map(f => `<div class="cp-lrow">
+          <div class="cp-lname"><b>${cEsc(f.p ? f.p.nombre : f.it.nombre)}</b><small>${f.p ? 'Stock ' + cFmt(f.p.stock || 0) : 'Producto eliminado'}${cItCosto(f) > 0 ? ' · ' + cMon(cItCosto(f)) + (cNum(f.it.factor) > 1 ? ' por ' + CP_TIPOS[f.it.tipo || 'paq'][0].toLowerCase() + ' (' + cFmt(f.it.factor) + ' unid.)' : ' c/u') : ''}</small></div>
           <div class="cp-step"><button onclick="cListaCant(${f.it.id},-1)"><i class="fa fa-minus"></i></button><input type="number" min="1" value="${cFmt(f.it.cant)}" onchange="cListaCantVal(${f.it.id},this.value)"><button onclick="cListaCant(${f.it.id},1)"><i class="fa fa-plus"></i></button></div>
-          <div class="icon-btn del" title="Quitar de la lista" onclick="cListaQuitar(${f.it.id})"><i class="fa fa-xmark"></i></div></div>`).join('')}
+          <div class="icon-btn del" title="Quitar de la lista" onclick="cListaQuitar(${f.it.id})"><i class="fa fa-xmark"></i></div>
+          <input type="text" class="cp-lnota" placeholder="Agregar nota (ej: promoción 3x1, viene con regalo...)" value="${cEsc(f.it.nota || '')}" onchange="cListaNota(${f.it.id},this.value)"></div>`).join('')}
       </section>`;
     }).join('')}</div>
     <div class="cp-cl-foot">
@@ -319,9 +356,65 @@ function cCompraListaRender() {
     </div>`;
 }
 
-function cAsignarProv(prodId, v) { const p = cProd(prodId); if (!p || !v) return; p.proveedor = v; cGuardar(); cCompraListaRender(); }
+// ---------- Modal: Asignar proveedor (búsqueda + creación rápida, estilo POS) ----------
+let _cApProdId = null;
+
+function cAbrirAsignarProv(prodId) {
+  const p = cProd(prodId); if (!p) return;
+  _cApProdId = prodId;
+  cId('cpApProd').innerHTML = `Producto: <b>${cEsc(p.nombre)}</b>`;
+  cId('cpApBuscar').value = '';
+  cAsignarProvRenderLista(proveedores.slice().sort((a, b) => a.empresa.localeCompare(b.empresa)), '');
+  openModal('modalAsignarProv');
+  setTimeout(() => cId('cpApBuscar').focus(), 50);
+}
+
+function cAsignarProvBuscar(q) {
+  q = q.trim();
+  const ql = q.toLowerCase();
+  const lista = !ql ? proveedores.slice() : proveedores.filter(p => p.empresa.toLowerCase().includes(ql));
+  cAsignarProvRenderLista(lista.sort((a, b) => a.empresa.localeCompare(b.empresa)), q);
+}
+
+function cAsignarProvRenderLista(lista, q) {
+  const cont = cId('cpApLista');
+  if (lista.length) {
+    cont.innerHTML = lista.map(p => `<div class="cp-ap-row" onclick="cAsignarProvElegir(${p.id})">${cAvatar(p.empresa, p.img)}
+      <div class="cp-ap-row-t"><b>${cEsc(p.empresa)}</b><small>${cVal(p.contacto) || cVal(p.tel) || 'Sin datos adicionales'}</small></div></div>`).join('');
+    return;
+  }
+  if (q) {
+    cont.innerHTML = `<div class="cp-ap-row nuevo" onclick="cAsignarProvNuevo('${q.replace(/'/g, "\\'")}')"><i class="fa fa-plus"></i>
+      <div class="cp-ap-row-t"><b>Agregar proveedor "${cEsc(q)}"</b><small>No tienes ningún proveedor con ese nombre</small></div></div>`;
+    return;
+  }
+  cont.innerHTML = cVacio('fa-truck', 'Aún no tienes proveedores', 'Escribe un nombre arriba para crear el primero.');
+}
+
+function cAsignarProvAsignar(nombreProv, mensaje) {
+  const p = cProd(_cApProdId); if (!p) return;
+  p.proveedor = nombreProv;
+  cGuardar(); closeModal('modalAsignarProv');
+  try { renderProdTable(); renderProdGrid(); } catch (e) { }
+  cCompraListaRender(); cRefrescarTabs();
+  showToast(mensaje, 'success');
+}
+
+function cAsignarProvElegir(id) {
+  const p = proveedores.find(x => x.id === id); if (!p) return;
+  cAsignarProvAsignar(p.empresa, 'Proveedor asignado');
+}
+
+function cAsignarProvNuevo(nombre) {
+  nombre = nombre.trim(); if (!nombre) return;
+  if (proveedores.some(p => p.empresa.trim().toLowerCase() === nombre.toLowerCase())) return cAsignarProvElegir(proveedores.find(p => p.empresa.trim().toLowerCase() === nombre.toLowerCase()).id);
+  const p = { id: cNuevoId(), empresa: nombre, ruc: '', contacto: '', tel: '', email: '', notas: '', emoji: '🏭', img: '', pedidos: [], fechaCreacion: new Date().toISOString() };
+  proveedores.push(p);
+  cAsignarProvAsignar(nombre, 'Proveedor creado y asignado');
+}
 function cListaCant(id, d) { const it = listaCompras.find(x => x.id === id); if (!it) return; it.cant = Math.max(1, cNum(it.cant) + d); cGuardar(); cCompraListaRender(); }
 function cListaCantVal(id, v) { const it = listaCompras.find(x => x.id === id); if (!it) return; it.cant = Math.max(1, cNum(v) || 1); cGuardar(); cCompraListaRender(); }
+function cListaNota(id, v) { const it = listaCompras.find(x => x.id === id); if (!it) return; it.nota = v.trim(); cGuardar(); }
 function cListaQuitar(id) { listaCompras = listaCompras.filter(x => x.id !== id); cGuardar(); cRefrescarTabs(); cCompraListaRender(); }
 function cListaVaciar() {
   if (!listaCompras.length) return;
@@ -332,8 +425,8 @@ function cItemsDeGrupo(gr) {
   return gr.filas.map(f => {
     const costo = cItCosto(f);
     return f.p
-      ? { prodId: f.p.id, nombre: f.p.nombre, cant: cNum(f.it.cant), factor: 1, costo }
-      : { prodId: f.it.prodId, nombre: f.it.nombre, cant: cNum(f.it.cant), factor: 1, costo };
+      ? { prodId: f.p.id, nombre: f.p.nombre, cant: cNum(f.it.cant), factor: cNum(f.it.factor) || 1, tipo: f.it.tipo || 'unid', costo, nota: f.it.nota || '' }
+      : { prodId: f.it.prodId, nombre: f.it.nombre, cant: cNum(f.it.cant), factor: cNum(f.it.factor) || 1, tipo: f.it.tipo || 'unid', costo, nota: f.it.nota || '' };
   });
 }
 function cListaOrden(gi) {
@@ -364,7 +457,9 @@ function cCrearOrden(provNombre, items, extra) {
   const pv = cProvPorNombre(provNombre);
   const o = Object.assign({
     id: cNuevoId(), numero: cSiguienteNumero(), proveedorId: pv ? pv.id : null, proveedor: provNombre || '',
-    fecha: cHoyISO(), notas: '', estado: 'pendiente', items: items.map(i => ({ ...i })), total: cTotalItems(items)
+    fecha: cHoyISO(), hora: new Date().toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' }),
+    creadoPor: currentUser ? currentUser.nombre : 'Admin',
+    notas: '', estado: 'pendiente', items: items.map(i => ({ ...i })), total: cTotalItems(items)
   }, extra || {});
   ordenesCompra.push(o);
   return o;
@@ -393,12 +488,13 @@ function cOrdRender() {
     const acc = o.estado === 'pendiente'
       ? `<button class="btn btn-success btn-sm" onclick="cAbrirRecibir(${o.id})"><i class="fa fa-box-open"></i> Recibir</button>
          <div class="icon-btn" title="Editar" onclick="cAbrirOrden({id:${o.id}})"><i class="fa fa-pen"></i></div>
-         <div class="icon-btn" title="Enviar por WhatsApp" onclick="cOrdWA(${o.id})"><i class="fa-brands fa-whatsapp"></i></div>
+         <div class="icon-btn" title="Enviar, imprimir o guardar" onclick="cOrdMenu(event,${o.id})"><i class="fa fa-share-nodes"></i></div>
          <div class="icon-btn del" title="Cancelar orden" onclick="cOrdCancelar(${o.id})"><i class="fa fa-ban"></i></div>`
       : `<div class="icon-btn" title="Ver detalle" onclick="cAbrirOrden({id:${o.id}})"><i class="fa fa-eye"></i></div>` +
+        `<div class="icon-btn" title="Enviar, imprimir o guardar" onclick="cOrdMenu(event,${o.id})"><i class="fa fa-share-nodes"></i></div>` +
         (o.estado === 'cancelada' ? `<div class="icon-btn del" title="Eliminar" onclick="cOrdEliminar(${o.id})"><i class="fa fa-trash"></i></div>` : '');
     return `<div class="cp-ord">
-      <div class="cp-ord-num"><b>${cNumOrden(o)}</b><small>${cFecha(o.estado === 'recibida' ? (o.fechaRecepcion || o.fecha) : o.fecha)}</small></div>
+      <div class="cp-ord-num"><b>${cNumOrden(o)}</b><small>${cFecha(o.estado === 'recibida' ? (o.fechaRecepcion || o.fecha) : o.fecha)}${(o.estado === 'recibida' ? (o.horaRecepcion || o.hora) : o.hora) ? ' · ' + cEsc(o.estado === 'recibida' ? (o.horaRecepcion || o.hora) : o.hora) : ''}</small>${o.creadoPor ? `<small class="cp-ord-por" title="Pedido realizado por ${cEsc(o.creadoPor)}"><i class="fa fa-user"></i> ${cEsc(o.creadoPor)}</small>` : ''}</div>
       <div class="cp-ord-prov">${cAvatar(o.proveedor, pv && pv.img)}<div><b>${o.proveedor ? cEsc(o.proveedor) : 'Compra libre'}</b><small>${o.items.length} producto${o.items.length !== 1 ? 's' : ''} · ${cFmt(unid)} unid.</small></div></div>
       <div class="cp-ord-total">${cMon(o.total != null ? o.total : cTotalItems(o.items))}</div>
       <span class="cp-st ${o.estado}">${o.estado === 'pendiente' ? 'Pendiente' : o.estado === 'recibida' ? 'Recibida' : 'Cancelada'}</span>
@@ -411,6 +507,148 @@ function cOrdWA(id) {
   const pv = cProvPorNombre(o.proveedor) || proveedores.find(p => p.id === o.proveedorId);
   cEnviar(pv && pv.tel, cMsgPedido(o.proveedor, o.items));
 }
+// ---------- Enviar / imprimir / guardar una orden ----------
+function cOrdDatos(id) {
+  const o = ordenesCompra.find(x => x.id === id); if (!o) return null;
+  const pv = cProvPorNombre(o.proveedor) || proveedores.find(p => p.id === o.proveedorId) || null;
+  return { o, pv, neg: (settings && settings.negocio) || {} };
+}
+function cOrdFechaHora(o) { return cFecha(o.fecha) + (o.hora ? ' ' + o.hora : ''); }
+function cOrdTexto(id) {
+  const d = cOrdDatos(id); if (!d) return '';
+  const { o, pv } = d;
+  const l = o.items.map(i => `• ${cFmt(i.cant)} x ${i.nombre}${i.factor > 1 ? ` (${cFmt(i.factor)} unid. c/u)` : ''} — ${cMon(i.costo)} c/u = ${cMon(cNum(i.cant) * cNum(i.costo))}${i.nota ? ` [${i.nota}]` : ''}`).join('\n');
+  return `ORDEN DE COMPRA ${cNumOrden(o)}\nFecha: ${cOrdFechaHora(o)}${o.creadoPor ? '\nPedido por: ' + o.creadoPor : ''}\nProveedor: ${o.proveedor || 'Compra libre'}\n\n${l}\n\nTOTAL: ${cMon(o.total != null ? o.total : cTotalItems(o.items))}${o.notas ? '\n\nNota: ' + o.notas : ''}\n\nGracias.${d.neg.nombre ? '\n' + d.neg.nombre : ''}`;
+}
+function cOrdCorreo(id) {
+  const d = cOrdDatos(id); if (!d) return;
+  const { o, pv } = d;
+  const asunto = `Pedido ${cNumOrden(o)}${d.neg.nombre ? ' - ' + d.neg.nombre : ''}`;
+  location.href = `mailto:${encodeURIComponent((pv && pv.email) || '')}?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(cOrdTexto(id))}`;
+  if (!(pv && pv.email)) showToast('El proveedor no tiene correo guardado; elige el destinatario en tu correo', 'info');
+}
+function cOrdHtml(id) {
+  const d = cOrdDatos(id); if (!d) return '';
+  const { o, pv, neg } = d;
+  const fila = i => `<tr><td class="l">${cEsc(i.nombre)}${i.nota ? `<br><small>${cEsc(i.nota)}</small>` : ''}</td><td>${cFmt(i.cant)}</td><td>${cFmt(i.factor || 1)}</td><td>${cMon(i.costo)}</td><td class="r">${cMon(cNum(i.cant) * cNum(i.costo))}</td></tr>`;
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${cNumOrden(o)}</title><style>
+    @page{size:A4;margin:16mm}
+    body{font-family:Arial,Helvetica,sans-serif;color:#111;font-size:13px;margin:0}
+    .top{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #111;padding-bottom:10px;margin-bottom:14px}
+    h1{font-size:20px;margin:0}h2{font-size:15px;margin:0;text-align:right}
+    .g{color:#666;font-size:12px}.info{display:grid;grid-template-columns:1fr 1fr;gap:4px 24px;margin-bottom:16px}
+    table{width:100%;border-collapse:collapse}th{background:#f0f0f0;font-size:11px;text-transform:uppercase;padding:7px 8px;text-align:center}
+    td{padding:7px 8px;border-bottom:1px solid #ddd;text-align:center}td.l,th.l{text-align:left}td.r,th.r{text-align:right}
+    small{color:#666}.tot{text-align:right;font-size:16px;font-weight:700;margin-top:14px}
+  </style></head><body>
+  <div class="top"><div><h1>${cEsc(neg.nombre || 'BodegaPOS')}</h1><div class="g">${[neg.dir, neg.tel, neg.email].filter(Boolean).map(cEsc).join(' · ')}</div></div>
+  <div><h2>ORDEN DE COMPRA</h2><h2>${cNumOrden(o)}</h2></div></div>
+  <div class="info"><div><span class="g">Fecha:</span> ${cOrdFechaHora(o)}</div><div><span class="g">Proveedor:</span> <b>${cEsc(o.proveedor || 'Compra libre')}</b></div>
+  <div><span class="g">Pedido por:</span> ${cEsc(o.creadoPor || '—')}</div><div><span class="g">Contacto:</span> ${cEsc(cVal(pv && pv.tel) || cVal(pv && pv.email) || '—')}</div></div>
+  <table><thead><tr><th class="l">Producto</th><th>Cant.</th><th>Unid. c/u</th><th>Costo c/u</th><th class="r">Subtotal</th></tr></thead><tbody>${o.items.map(fila).join('')}</tbody></table>
+  <div class="tot">Total: ${cMon(o.total != null ? o.total : cTotalItems(o.items))}</div>
+  ${o.notas ? `<p class="g">Nota: ${cEsc(o.notas)}</p>` : ''}
+  </body></html>`;
+}
+function cOrdImprimir(id) {
+  const html = cOrdHtml(id); if (!html) return;
+  const fr = document.createElement('iframe');
+  fr.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;';
+  document.body.appendChild(fr);
+  fr.contentDocument.open(); fr.contentDocument.write(html); fr.contentDocument.close();
+  setTimeout(() => { try { fr.contentWindow.focus(); fr.contentWindow.print(); } catch (e) { showToast('No se pudo abrir la impresión', 'error'); } setTimeout(() => fr.remove(), 2000); }, 300);
+}
+
+// PDF sencillo hecho a mano (sin librerías): A4, Helvetica, con varias páginas si hace falta
+function cPdfOrden(o, pv, neg) {
+  const W = 595, H = 842, M = 40;
+  const pages = []; let ops = [], y = M;
+  const wid = (t, s, b) => { let w = 0; for (const ch of String(t)) w += /[0-9]/.test(ch) ? .556 : ch === ' ' ? .278 : /[mwMW]/.test(ch) ? .8 : /[.,:;'|!ilj]/.test(ch) ? .26 : /[A-Z]/.test(ch) ? .68 : .52; return w * s * (b ? 1.06 : 1); };
+  const enc = t => String(t == null ? '' : t).replace(/[\u2013\u2014]/g, '-').replace(/[\u2018\u2019]/g, "'").replace(/[\u201c\u201d]/g, '"').replace(/[\u2022]/g, '-').replace(/[^\x20-\x7e\xa1-\xff]/g, '?');
+  const esc = t => enc(t).replace(/([\\()])/g, '\\$1');
+  const txt = (t, x, yy, s, op) => {
+    op = op || {}; const w = wid(enc(t), s, op.b); const px = op.al === 'c' ? x - w / 2 : op.al === 'r' ? x - w : x;
+    ops.push(`BT ${op.col || '0 g'} /${op.b ? 'F2' : 'F1'} ${s} Tf ${px.toFixed(1)} ${(H - yy).toFixed(1)} Td (${esc(t)}) Tj ET`);
+  };
+  const linea = (yy, x1, x2, g, w) => ops.push(`${g || '0.8'} G ${w || 0.5} w ${x1} ${H - yy} m ${x2} ${H - yy} l S`);
+  const GRIS = '0.4 g';
+  const wrap = (t, maxW, s) => { const out = []; let cur = ''; String(t).split(/\s+/).forEach(pal => { const p = cur ? cur + ' ' + pal : pal; if (wid(enc(p), s) > maxW && cur) { out.push(cur); cur = pal; } else cur = p; }); if (cur) out.push(cur); return out.length ? out : ['']; };
+  const cab = () => {
+    ops.push(`0.94 g ${M} ${H - y - 20} ${W - 2 * M} 20 re f`);
+    txt('PRODUCTO', M + 8, y + 14, 8, { b: 1, col: GRIS }); txt('CANT.', 285, y + 14, 8, { b: 1, col: GRIS, al: 'c' });
+    txt('UNID. C/U', 350, y + 14, 8, { b: 1, col: GRIS, al: 'c' }); txt('COSTO C/U', 425, y + 14, 8, { b: 1, col: GRIS, al: 'c' });
+    txt('SUBTOTAL', W - M - 8, y + 14, 8, { b: 1, col: GRIS, al: 'r' });
+    y += 20;
+  };
+  txt(neg.nombre || 'BodegaPOS', M, y + 14, 16, { b: 1 });
+  txt('ORDEN DE COMPRA', W - M, y + 12, 10, { b: 1, al: 'r', col: GRIS }); txt(cNumOrden(o), W - M, y + 30, 15, { b: 1, al: 'r' });
+  const sub = [neg.dir, neg.tel, neg.email].filter(Boolean).join('  |  '); if (sub) txt(sub, M, y + 30, 9, { col: GRIS });
+  y += 44; linea(y, M, W - M, '0', 1.2); y += 18;
+  const dato = (et, val, x, yy) => { txt(et, x, yy, 9, { col: GRIS }); txt(val, x + 62, yy, 10, { b: 1 }); };
+  dato('Fecha:', cOrdFechaHora(o), M, y); dato('Proveedor:', o.proveedor || 'Compra libre', 300, y); y += 16;
+  dato('Pedido por:', o.creadoPor || '-', M, y); dato('Contacto:', (pv && (cVal(pv.tel) || cVal(pv.email))) || '-', 300, y); y += 26;
+  cab();
+  o.items.forEach(i => {
+    const nl = wrap(i.nombre, 200, 10), h = nl.length * 13 + (i.nota ? 11 : 0) + 10;
+    if (y + h > H - 90) { pages.push(ops.join('\n')); ops = []; y = M; cab(); }
+    nl.forEach((l, k) => txt(l, M + 8, y + 15 + k * 13, 10, { b: 1 }));
+    if (i.nota) txt(i.nota, M + 8, y + 15 + nl.length * 13 - 1, 8, { col: GRIS });
+    const my = y + 15;
+    txt(cFmt(i.cant), 285, my, 10, { al: 'c' }); txt(cFmt(i.factor || 1), 350, my, 10, { al: 'c' });
+    txt(cMon(i.costo), 425, my, 10, { al: 'c' }); txt(cMon(cNum(i.cant) * cNum(i.costo)), W - M - 8, my, 10, { b: 1, al: 'r' });
+    y += h; linea(y, M, W - M, '0.85');
+  });
+  y += 22;
+  if (y > H - 70) { pages.push(ops.join('\n')); ops = []; y = M + 10; }
+  txt('TOTAL', 400, y, 10, { b: 1, col: GRIS, al: 'r' }); txt(cMon(o.total != null ? o.total : cTotalItems(o.items)), W - M - 8, y, 15, { b: 1, al: 'r' });
+  if (o.notas) { y += 26; wrap('Nota: ' + o.notas, W - 2 * M, 9).forEach((l, k) => txt(l, M, y + k * 12, 9, { col: GRIS })); }
+  pages.push(ops.join('\n'));
+  const objs = [];
+  objs[1] = '<< /Type /Catalog /Pages 2 0 R >>';
+  objs[2] = `<< /Type /Pages /Kids [${pages.map((_, i) => (5 + i * 2) + ' 0 R').join(' ')}] /Count ${pages.length} >>`;
+  objs[3] = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>';
+  objs[4] = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>';
+  pages.forEach((c, i) => {
+    objs[5 + i * 2] = `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${W} ${H}] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents ${6 + i * 2} 0 R >>`;
+    objs[6 + i * 2] = `<< /Length ${c.length} >>\nstream\n${c}\nendstream`;
+  });
+  let out = '%PDF-1.4\n'; const off = [];
+  for (let i = 1; i < objs.length; i++) { off[i] = out.length; out += `${i} 0 obj\n${objs[i]}\nendobj\n`; }
+  const xr = out.length;
+  out += `xref\n0 ${objs.length}\n0000000000 65535 f \n` + off.slice(1).map(n => String(n).padStart(10, '0') + ' 00000 n \n').join('') + `trailer\n<< /Size ${objs.length} /Root 1 0 R >>\nstartxref\n${xr}\n%%EOF`;
+  const bytes = new Uint8Array(out.length); for (let i = 0; i < out.length; i++) bytes[i] = out.charCodeAt(i) & 255;
+  return new Blob([bytes], { type: 'application/pdf' });
+}
+function cOrdGuardarPC(id) {
+  const d = cOrdDatos(id); if (!d) return;
+  const blob = cPdfOrden(d.o, d.pv, d.neg);
+  const nombre = (cNumOrden(d.o) + (d.o.proveedor ? ' - ' + d.o.proveedor : '')).replace(/[\\/:*?"<>|]/g, '') + '.pdf';
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = nombre;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  showToast('Orden guardada como PDF', 'success');
+}
+
+// Menú flotante de cada orden
+function cOrdMenuCerrar() { const m = cId('cpPop'); if (m) m.remove(); }
+function cOrdMenu(ev, id) {
+  ev.stopPropagation();
+  const abierto = cId('cpPop'); cOrdMenuCerrar(); if (abierto && abierto.dataset.id == id) return;
+  const r = ev.currentTarget.getBoundingClientRect();
+  const m = document.createElement('div'); m.className = 'cp-pop'; m.id = 'cpPop'; m.dataset.id = id;
+  m.innerHTML = `<button onclick="cOrdMenuCerrar();cOrdWA(${id})"><i class="fa-brands fa-whatsapp"></i> WhatsApp</button>
+    <button onclick="cOrdMenuCerrar();cOrdCorreo(${id})"><i class="fa fa-envelope"></i> Correo</button>
+    <button onclick="cOrdMenuCerrar();cOrdImprimir(${id})"><i class="fa fa-print"></i> Imprimir</button>
+    <button onclick="cOrdMenuCerrar();cOrdGuardarPC(${id})"><i class="fa fa-download"></i> Guardar en mi PC (PDF)</button>`;
+  document.body.appendChild(m);
+  const h = m.offsetHeight, w = m.offsetWidth;
+  m.style.top = (r.bottom + h + 8 > innerHeight ? Math.max(8, r.top - h - 4) : r.bottom + 4) + 'px';
+  m.style.left = Math.max(8, Math.min(r.right - w, innerWidth - w - 8)) + 'px';
+}
+document.addEventListener('click', cOrdMenuCerrar);
+window.addEventListener('resize', cOrdMenuCerrar);
+
 function cOrdCancelar(id) {
   const o = ordenesCompra.find(x => x.id === id); if (!o) return;
   if (!cfgConfirm(`¿Cancelar la orden ${cNumOrden(o)}?`)) return;
@@ -433,55 +671,66 @@ function cAbrirOrden(o) {
     : { id: null, ro: false, numero: cSiguienteNumero(), prov: o.prov || '', fecha: cHoyISO(), notas: '', items: (o.items || []).map(i => ({ ...i })), desdeLista: o.desdeLista || [], estado: 'pendiente' };
   const ro = _cOrd.ro;
   cId('cpOrdTitulo').innerHTML = `<i class="fa fa-file-invoice" style="color:var(--accent);margin-right:8px;"></i>${_cOrd.id ? cNumOrden(ord) + (ro ? ' · ' + (ord.estado === 'recibida' ? 'Recibida' : 'Cancelada') : '') : 'Nueva orden de compra'}`;
-  cId('cpOrdProv').innerHTML = cOpcionesProv(_cOrd.prov, 'Compra libre (sin proveedor)');
-  cId('cpOrdProv').disabled = ro;
+  cId('cpOrdProvInput').value = _cOrd.prov;
+  cId('cpOrdProvInput').disabled = ro;
+  cId('cpOrdProvDd').style.display = 'none';
   cId('cpOrdFecha').value = _cOrd.fecha; cId('cpOrdFecha').disabled = ro;
   cId('cpOrdNotas').value = _cOrd.notas; cId('cpOrdNotas').disabled = ro;
-  cId('cpOrdAddWrap').style.display = ro ? 'none' : '';
-  cId('cpOrdAdd').value = '';
   cId('cpOrdGuardar').style.display = ro ? 'none' : '';
   cOrdRenderItems();
   openModal('modalCompOrden');
 }
 
+// ---------- Proveedor: buscador con creación rápida (mismo patrón que "Asignar proveedor") ----------
+function cOrdProvBuscar(q) {
+  const dd = cId('cpOrdProvDd');
+  const ql = q.trim().toLowerCase();
+  const lista = (!ql ? proveedores.slice() : proveedores.filter(p => p.empresa.toLowerCase().includes(ql))).sort((a, b) => a.empresa.localeCompare(b.empresa));
+  const esc = t => t.replace(/'/g, "\\'");
+  const exacto = lista.some(p => p.empresa.trim().toLowerCase() === ql);
+  let html = lista.map(p => `<div class="cp-dd-item" onmousedown="cOrdProvElegir('${esc(p.empresa)}')"><b>${cEsc(p.empresa)}</b></div>`).join('');
+  if (ql && !exacto) html += `<div class="cp-dd-item cp-dd-add" onmousedown="cOrdProvNuevo('${esc(q.trim())}')"><i class="fa fa-plus"></i>Agregar proveedor "${cEsc(q.trim())}"</div>`;
+  if (!html) html = '<div class="cp-dd-empty">Aún no tienes proveedores</div>';
+  dd.innerHTML = html;
+  dd.style.display = 'block';
+}
+function cOrdProvElegir(nombre) {
+  _cOrd.prov = nombre;
+  cId('cpOrdProvInput').value = nombre;
+  cId('cpOrdProvDd').style.display = 'none';
+}
+function cOrdProvNuevo(nombre) {
+  nombre = nombre.trim(); if (!nombre) return;
+  if (!proveedores.some(p => p.empresa.trim().toLowerCase() === nombre.toLowerCase())) {
+    proveedores.push({ id: cNuevoId(), empresa: nombre, ruc: '', contacto: '', tel: '', email: '', notas: '', emoji: '🏭', img: '', pedidos: [], fechaCreacion: new Date().toISOString() });
+    cGuardar();
+  }
+  cOrdProvElegir(nombre);
+  showToast('Proveedor creado', 'success');
+}
+
+// ---------- Ítems: solo lectura (se cargan desde la Lista de compras, ya no se editan aquí) ----------
 function cOrdRenderItems() {
   const ro = _cOrd.ro, its = _cOrd.items;
-  if (!its.length) { cId('cpOrdItems').innerHTML = cVacio('fa-basket-shopping', 'Sin productos', 'Busca un producto arriba para agregarlo a la orden.'); cOrdTotal(); return; }
-  cId('cpOrdItems').innerHTML = `<table class="cp-otbl"><thead><tr><th>Producto</th><th>Cant.</th><th title="Unidades que trae cada presentación (caja, docena...)">Unid. c/u</th><th title="Precio de cada presentación">Costo c/u</th><th>Subtotal</th><th></th></tr></thead><tbody>
-    ${its.map((i, x) => `<tr><td class="n">${cEsc(i.nombre)}</td>
-      <td><input type="number" min="0" step="any" value="${cFmt(i.cant)}" ${ro ? 'disabled' : ''} oninput="cOrdEdit(${x},'cant',this.value)"></td>
-      <td><input type="number" min="1" step="any" list="cpFactores" value="${cFmt(i.factor || 1)}" ${ro ? 'disabled' : ''} oninput="cOrdEdit(${x},'factor',this.value)"></td>
-      <td><input type="number" min="0" step="0.01" value="${cFmt(i.costo)}" ${ro ? 'disabled' : ''} oninput="cOrdEdit(${x},'costo',this.value)"></td>
-      <td class="s" id="cpOrdSub_${x}">${cMon(cNum(i.cant) * cNum(i.costo))}</td>
-      <td>${ro ? '' : `<div class="icon-btn del" onclick="cOrdQuitar(${x})"><i class="fa fa-xmark"></i></div>`}</td></tr>`).join('')}
-    </tbody></table>${ro ? '' : '<p class="cp-note">Cant. × Unid. c/u = unidades que entran al stock. El costo es lo que cuesta cada caja, docena o unidad.</p>'}`;
-  cOrdTotal();
-}
-function cOrdEdit(x, campo, v) {
-  const i = _cOrd.items[x]; if (!i) return;
-  i[campo] = Math.max(campo === 'factor' ? 1 : 0, cNum(v));
-  const s = cId('cpOrdSub_' + x); if (s) s.textContent = cMon(cNum(i.cant) * cNum(i.costo));
+  if (!its.length) { cId('cpOrdItems').innerHTML = cVacio('fa-basket-shopping', 'Sin productos', 'Agrega productos desde la pestaña Comprar y crea la orden desde ahí.'); cOrdTotal(); return; }
+  cId('cpOrdItems').innerHTML = `<table class="cp-otbl cp-otbl-ord"><thead><tr><th>Producto</th><th>Notas</th><th>Cant.</th><th title="Unidades que trae cada presentación (caja, docena...)">Unid. c/u</th><th title="Precio de cada presentación">Costo c/u</th><th>Subtotal</th></tr></thead><tbody>
+    ${its.map(i => `<tr><td class="n">${cEsc(i.nombre)}</td>
+      <td class="nt">${i.nota ? cEsc(i.nota) : '<span class="nt-vacio">—</span>'}</td>
+      <td class="q">${cFmt(i.cant)}</td>
+      <td><span class="cp-pill">${cFmt(i.factor || 1)}</span></td>
+      <td class="m">${cMon(i.costo)}</td>
+      <td class="s">${cMon(cNum(i.cant) * cNum(i.costo))}</td></tr>`).join('')}
+    </tbody></table>`;
   cOrdTotal();
 }
 function cOrdTotal() { cId('cpOrdTotal').textContent = cMon(cTotalItems(_cOrd.items)); }
 function cOrdQuitar(x) { _cOrd.items.splice(x, 1); cOrdRenderItems(); }
-function cOrdBuscar(q) {
-  const dd = cId('cpOrdAddDd');
-  if (!q.trim()) { dd.style.display = 'none'; return; }
-  dd.innerHTML = cDdHtml(cBuscarProductos(q, cId('cpOrdProv').value), 'cOrdAgregar'); dd.style.display = 'block';
-}
-function cOrdAgregar(id) {
-  const p = cProd(id); if (!p) return;
-  const ex = _cOrd.items.find(i => i.prodId === id);
-  if (ex) ex.cant = cNum(ex.cant) + 1; else _cOrd.items.push(cItemDesdeProd(p, 1));
-  cId('cpOrdAdd').value = ''; cId('cpOrdAddDd').style.display = 'none';
-  cOrdRenderItems();
-}
 
 function cOrdGuardar() {
   const items = _cOrd.items.filter(i => cNum(i.cant) > 0);
-  if (!items.length) return showToast('Agrega al menos un producto con cantidad', 'error');
-  const prov = cId('cpOrdProv').value, fecha = cId('cpOrdFecha').value || cHoyISO(), notas = cId('cpOrdNotas').value.trim();
+  if (!items.length) return showToast('La orden no tiene productos', 'error');
+  const prov = cId('cpOrdProvInput').value.trim(), fecha = cId('cpOrdFecha').value || cHoyISO(), notas = cId('cpOrdNotas').value.trim();
+  if (prov) cOrdProvNuevoSilencioso(prov);
   const pv = cProvPorNombre(prov);
   if (_cOrd.id) {
     const o = ordenesCompra.find(x => x.id === _cOrd.id); if (!o) return;
@@ -495,13 +744,26 @@ function cOrdGuardar() {
   _cTab = 'ord'; _cF.ord.estado = 'pendiente';
   renderCompras(); showToast('Orden guardada', 'success');
 }
+// Crea el proveedor si escribieron un nombre nuevo sin elegirlo del listado (sin toast, para no duplicar el de Guardar)
+function cOrdProvNuevoSilencioso(nombre) {
+  if (!proveedores.some(p => p.empresa.trim().toLowerCase() === nombre.toLowerCase())) {
+    proveedores.push({ id: cNuevoId(), empresa: nombre, ruc: '', contacto: '', tel: '', email: '', notas: '', emoji: '🏭', img: '', pedidos: [], fechaCreacion: new Date().toISOString() });
+  }
+}
 
 // ---------- Recibir una orden ----------
 let _cRec = null;
 
 function cAbrirRecibir(id) {
   const o = ordenesCompra.find(x => x.id === id); if (!o || o.estado !== 'pendiente') return;
-  _cRec = { id, metodo: 'efectivo', montoManual: false, items: o.items.map(i => ({ ...i, pedida: i.cant })) };
+  _cRec = {
+    id, metodo: 'efectivo', montoManual: false,
+    items: o.items.map(i => {
+      const it = { ...i, pedida: i.cant, costoTotal: Math.round(cNum(i.cant) * cNum(i.costo) * 100) / 100 };
+      cRecRecalcular(it);
+      return it;
+    })
+  };
   cId('cpRecHead').innerHTML = `${cAvatar(o.proveedor, (cProvPorNombre(o.proveedor) || {}).img)}<div><b>${cNumOrden(o)} · ${o.proveedor ? cEsc(o.proveedor) : 'Compra libre'}</b><small>Confirma lo que llegó y lo que pagaste. El stock se actualiza al confirmar.</small></div>`;
   cId('cpRecCosto').checked = true;
   cRecMetodo('efectivo');
@@ -509,30 +771,70 @@ function cAbrirRecibir(id) {
   openModal('modalCompRecibir');
 }
 
+// Cómo fue pedido: "2 Doc.", "2 Unid.", "2 Paq."...
+function cRecEtiquetaOrdenado(i) {
+  const t = i.tipo || 'unid';
+  const nombre = (CP_TIPOS[t] || CP_TIPOS.unid)[0];
+  return `${cFmt(i.pedida)} ${nombre}`;
+}
+
 function cRecRender() {
-  cId('cpRecItems').innerHTML = `<table class="cp-otbl"><thead><tr><th>Producto</th><th>Pedido</th><th>Llegó</th><th>Unid. c/u</th><th>Costo c/u</th><th>Subtotal</th></tr></thead><tbody>
+  cId('cpRecItems').innerHTML = `<table class="cp-otbl"><thead><tr><th>Código</th><th style="text-align:left">Producto</th><th>Ordenado</th><th>Recibido</th><th>Costo</th><th>Costo unit.</th><th>Diferencia</th><th>P.Venta</th><th>Importe</th></tr></thead><tbody>
     ${_cRec.items.map((i, x) => {
       const p = cProd(i.prodId);
-      return `<tr><td class="n">${cEsc(i.nombre)}${!p ? ' <em class="cp-chip red">eliminado</em>' : ''}<small class="cp-warn" id="cpRecW_${x}">${cRecAlerta(i)}</small></td>
-      <td class="m">${cFmt(i.pedida)}</td>
+      return `<tr><td class="m">${p && p.codigo ? cEsc(p.codigo) : '—'}</td>
+      <td class="n">${cEsc(i.nombre)}${!p ? ' <em class="cp-chip red">eliminado</em>' : ''}<small class="cp-warn" id="cpRecW_${x}">${cRecAlerta(i)}</small></td>
+      <td class="m">${cEsc(cRecEtiquetaOrdenado(i))}</td>
       <td><input type="number" min="0" step="any" value="${cFmt(i.cant)}" oninput="cRecEdit(${x},'cant',this.value)"></td>
-      <td><input type="number" min="1" step="any" list="cpFactores" value="${cFmt(i.factor || 1)}" oninput="cRecEdit(${x},'factor',this.value)"></td>
-      <td><input type="number" min="0" step="0.01" value="${cFmt(i.costo)}" oninput="cRecEdit(${x},'costo',this.value)"></td>
-      <td class="s" id="cpRecSub_${x}">${cMon(cNum(i.cant) * cNum(i.costo))}</td></tr>`;
+      <td><input type="number" min="0" step="0.01" value="${cFmt(i.costoTotal)}" oninput="cRecEdit(${x},'costoTotal',this.value)" title="Lo que pagaste en total por lo que recibiste de este producto"></td>
+      <td class="m" id="cpRecCU_${x}" title="Se calcula solo: costo ÷ cantidad recibida">${cMon(i.costoUnit)}</td>
+      <td id="cpRecDif_${x}">${cRecDiferencia(i)}</td>
+      <td class="m" id="cpRecPV_${x}" title="Se calcula solo, según tu % de ganancia configurado">${cMon(i.precioVenta)}</td>
+      <td class="s" id="cpRecSub_${x}">${cMon(i.costoTotal)}</td></tr>`;
     }).join('')}</tbody></table>`;
   cRecTotal();
 }
+// Recalcula costo unitario, costo por presentación y precio de venta sugerido a partir de lo recibido y el costo total pagado
+function cRecRecalcular(i) {
+  const p = cProd(i.prodId);
+  const baseUnid = cNum(i.cant) * cNum(i.factor || 1);
+  i.costoUnit = baseUnid > 0 ? Math.round((cNum(i.costoTotal) / baseUnid) * 100) / 100 : 0;
+  i.costo = Math.round(i.costoUnit * cNum(i.factor || 1) * 100) / 100;
+  i.precioVenta = cRecPrecioSugerido(i, p);
+}
 function cRecEdit(x, campo, v) {
   const i = _cRec.items[x]; if (!i) return;
-  i[campo] = Math.max(campo === 'factor' ? 1 : 0, cNum(v));
-  const s = cId('cpRecSub_' + x); if (s) s.textContent = cMon(cNum(i.cant) * cNum(i.costo));
+  if (campo === 'costoTotal') i.costoTotal = Math.max(0, cNum(v));
+  else i[campo] = Math.max(campo === 'factor' ? 1 : 0, cNum(v));
+  cRecRecalcular(i);
+  const cu = cId('cpRecCU_' + x); if (cu) cu.textContent = cMon(i.costoUnit);
+  const pv = cId('cpRecPV_' + x); if (pv) pv.textContent = cMon(i.precioVenta);
+  const s = cId('cpRecSub_' + x); if (s) s.textContent = cMon(i.costoTotal);
   const w = cId('cpRecW_' + x); if (w) w.innerHTML = cRecAlerta(i);
+  const d = cId('cpRecDif_' + x); if (d) d.innerHTML = cRecDiferencia(i);
   cRecTotal();
+}
+// Compara el costo unitario ya registrado del producto contra el nuevo costo unitario, en %
+function cRecDiferencia(i) {
+  const p = cProd(i.prodId); if (!p) return '—';
+  const anterior = +p.costo || 0, nuevo = cNum(i.costoUnit);
+  if (anterior <= 0 || Math.abs(nuevo - anterior) < 0.005) return '<span class="cp-rec-dif eq">=</span>';
+  const pct = ((nuevo - anterior) / anterior) * 100;
+  return `<span class="cp-rec-dif ${pct > 0 ? 'up' : 'down'}"><i class="fa fa-arrow-${pct > 0 ? 'up' : 'down'}"></i> ${Math.abs(pct).toFixed(1)}%</span>`;
+}
+// Precio de venta sugerido: nuevo costo unitario + el % de ganancia que tiene configurado el producto,
+// redondeado igual que en Productos (al décimo más cercano). Si el producto no tiene % configurado,
+// se deja el precio de venta que ya tenía.
+function cRecPrecioSugerido(i, p) {
+  const costo = cNum(i.costoUnit);
+  const pct = (p && p.gananciaPct != null && p.gananciaPct !== '') ? +p.gananciaPct : null;
+  if (costo <= 0 || pct == null) return p ? (+p.precio || 0) : 0;
+  return typeof _redondear10 === 'function' ? _redondear10(costo * (1 + pct / 100)) : Math.round(costo * (1 + pct / 100) * 100) / 100;
 }
 // Aviso si lo que pagas por unidad iguala o supera el precio al que lo vendes
 function cRecAlerta(i) {
   const p = cProd(i.prodId); if (!p) return '';
-  const cu = cNum(i.factor) > 0 ? cNum(i.costo) / cNum(i.factor) : 0;
+  const cu = cNum(i.costoUnit);
   return (cu > 0 && (+p.precio || 0) > 0 && cu >= +p.precio)
     ? `<i class="fa fa-triangle-exclamation"></i> Cuesta ${cMon(cu)} c/u y lo vendes a ${cMon(p.precio)}` : '';
 }
@@ -557,12 +859,13 @@ function cRecConfirmar() {
   if (metodo !== 'ninguno' && monto <= 0) return showToast('Ingresa el monto pagado', 'error');
   const actualizarCosto = cId('cpRecCosto').checked;
 
-  // 1) Stock (y costo) de los productos
+  // 1) Stock, costo y precio de venta de los productos
   items.forEach(i => {
     const p = cProd(i.prodId); if (!p) return;
     p.stock = (+p.stock || 0) + cNum(i.cant) * cNum(i.factor || 1);
-    if (actualizarCosto && cNum(i.costo) > 0) {
-      p.costo = Math.round(cNum(i.costo) / cNum(i.factor || 1) * 100) / 100;
+    if (actualizarCosto && cNum(i.costoUnit) > 0) {
+      p.costo = Math.round(cNum(i.costoUnit) * 100) / 100;
+      if (cNum(i.precioVenta) > 0) p.precio = Math.round(cNum(i.precioVenta) * 100) / 100;
       p.gananciaPct = (p.costo > 0 && p.precio > 0) ? +(((p.precio - p.costo) / p.costo) * 100).toFixed(2) : 0;
     }
     if (!p.proveedor && o.proveedor) p.proveedor = o.proveedor;   // la próxima vez ya sale con su proveedor
@@ -579,8 +882,14 @@ function cRecConfirmar() {
   // 3) Salida de dinero: mismo registro que ya leen Reportes y Dashboard
   if (metodo !== 'ninguno') {
     const snap = items.map(i => { const u = cNum(i.cant) * cNum(i.factor || 1); return { nombre: i.nombre, qty: u, tipo: 'unid.', cant: u, precio: 0 }; });
-    pagosProveedoresHistorial.push({ fechaISO, fecha, hora, proveedor: etiqueta, monto, metodo, items: snap });
-    ventasHistorial.push({ fechaISO, fecha, hora, cliente: etiqueta, vendedor: currentUser ? currentUser.nombre : 'Admin', metodoPago: metodo, total: monto, pagado: monto, esPagoPedidoProv: true, items: snap, productos: snap });
+    const nuevoPago = { id: Date.now(), fechaISO, fecha, hora, proveedor: etiqueta, monto, metodo, items: snap };
+    const nuevaVenta = { id: Date.now() + 1, fechaISO, fecha, hora, cliente: etiqueta, vendedor: currentUser ? currentUser.nombre : 'Admin', metodoPago: metodo, total: monto, pagado: monto, esPagoPedidoProv: true, items: snap, productos: snap };
+    pagosProveedoresHistorial.push(nuevoPago);
+    ventasHistorial.push(nuevaVenta);
+    if (typeof sbGuardarRegistro === 'function') {
+      sbGuardarRegistro('pagosProveedoresHistorial', nuevoPago);
+      sbGuardarRegistro('ventasHistorial', nuevaVenta);
+    }
   }
 
   cGuardar(); closeModal('modalCompRecibir');

@@ -1,4 +1,5 @@
-if ('serviceWorker' in navigator) {
+// En la versión de escritorio (protocolo app://) no hace falta: todo ya está dentro del programa
+if ('serviceWorker' in navigator && location.protocol !== 'app:') {
   const registrarSW = () => {
     navigator.serviceWorker.register('sw.js')
       .then(reg => console.log('SW registrado:', reg.scope))

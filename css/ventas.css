@@ -79,31 +79,32 @@
 
 .pay-method:hover,.pay-method.selected{border-color:var(--accent);background:rgba(245,158,11,0.08);}
 
-/* ====== BARRA DE ACCIONES RÁPIDAS DEL POS ====== */
+/* ====== BARRA DE ACCIONES RÁPIDAS DEL POS (junto al título "Ventas") ====== */
 .pos-acciones{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(120px,1fr));
+  display:flex;
+  flex-wrap:wrap;
   gap:8px;
-  margin-bottom:12px;
+  margin-bottom:0;
 }
 .pos-accion-btn{
   position:relative;
   display:flex;
-  flex-direction:column;
+  flex-direction:row;
   align-items:center;
   justify-content:center;
-  gap:6px;
-  padding:10px 8px;
+  gap:7px;
+  padding:9px 14px;
   background:var(--pcbg, var(--surface2));
   border:1px solid var(--border);
-  border-radius:8px;
+  border-radius:9px;
   cursor:pointer;
   text-align:center;
+  white-space:nowrap;
   transition:all 0.15s;
 }
 .pos-accion-btn:hover{border-color:var(--pc, var(--accent));transform:translateY(-1px);}
-.pos-accion-btn i{font-size:16px;color:var(--pc, var(--accent));}
-.pos-accion-btn span{font-size:11px;font-weight:700;color:var(--text);line-height:1.2;}
+.pos-accion-btn i{font-size:14px;color:var(--pc, var(--accent));}
+.pos-accion-btn span{font-size:12px;font-weight:700;color:var(--text);line-height:1.2;}
 .pos-accion-btn.activo{border-color:var(--pc, var(--accent));background:var(--pc, var(--accent));}
 .pos-accion-btn.activo i,.pos-accion-btn.activo span:not(.pos-accion-badge){color:#000;}
 .pos-accion-badge{
@@ -114,7 +115,7 @@
   display:flex;align-items:center;justify-content:center;
 }
 @media (max-width:900px){
-  .pos-acciones{grid-template-columns:repeat(auto-fill,minmax(90px,1fr));}
+  .pos-accion-btn{padding:8px 10px;}
   .pos-accion-btn span{font-size:10px;}
 }
 .pay-method i{font-size:16px;display:block;margin-bottom:3px;color:var(--text3);}

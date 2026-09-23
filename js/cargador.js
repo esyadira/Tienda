@@ -12,6 +12,7 @@
 
   // Orden de carga: comparten el mismo ámbito global, no cambiar el orden sin revisar dependencias.
   var SCRIPTS = [
+    'js/escritorio.js',
     'js/supabase.js',
     'js/datos.js',
     'js/pagos.js',

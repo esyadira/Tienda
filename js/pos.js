@@ -722,6 +722,7 @@ if (notaInput) notaInput.value = '';
   };
   
   ventasHistorial.push(ventaRecord);
+  if (typeof sbGuardarRegistro === 'function') sbGuardarRegistro('ventasHistorial', ventaRecord); // solo sube esta venta, no todo el historial
 
   // --- LIMPIEZA Y ACTUALIZACIÓN ---
   

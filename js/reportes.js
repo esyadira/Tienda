@@ -27,6 +27,7 @@ function eliminarReporteDia() {
   if (ventas.length === 0) { showToast('No hay registros para eliminar en este día', 'info'); return; }
   if (!confirm(`¿Eliminar TODOS los registros del ${label}?\n\nSe eliminarán ${ventas.length} venta(s). Esta acción no se puede deshacer.`)) return;
   ventasHistorial = ventasHistorial.filter(v => v.fechaISO !== fecha || v.esPagoPedidoProv);
+  if (typeof sbBorrarRegistro === 'function') ventas.forEach(v => sbBorrarRegistro('ventasHistorial', v.id));
   guardarTodoEnLocalStorage();
   renderReportes();
   showToast(`Reporte del ${label} eliminado`, 'success');
@@ -35,6 +36,7 @@ function eliminarReporteDia() {
 function eliminarVentaIndividual(ventaId) {
   if (!confirm('¿Eliminar este registro del reporte? Esta acción no se puede deshacer.')) return;
   ventasHistorial = ventasHistorial.filter(v => v.id !== ventaId);
+  if (typeof sbBorrarRegistro === 'function') sbBorrarRegistro('ventasHistorial', ventaId);
   guardarTodoEnLocalStorage();
   actualizarDashboardReal();
   renderReportes(_getPanelActivo());
@@ -82,11 +84,13 @@ function eliminarLineaVenta(ventaId, itemIndex) {
   // 3. Modificar ventasHistorial
   if (items.length <= 1) {
     ventasHistorial = ventasHistorial.filter(v => v.id !== ventaId);
+    if (typeof sbBorrarRegistro === 'function') sbBorrarRegistro('ventasHistorial', ventaId);
   } else {
     items.splice(itemIndex, 1);
     const nuevoTotal = items.reduce((sum, p) => sum + (p.precio * (p.cant || p.qty || 1)), 0);
     venta.total = nuevoTotal;
     if (venta.pagado !== undefined) venta.pagado = Math.min(venta.pagado, nuevoTotal);
+    if (typeof sbGuardarRegistro === 'function') sbGuardarRegistro('ventasHistorial', venta); // solo se resube esta venta
   }
 
   guardarTodoEnLocalStorage();

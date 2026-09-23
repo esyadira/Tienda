@@ -30,14 +30,14 @@ const TICKET_DEFECTO = {
 // La forma de pago ya no se imprime; en pagos mixtos sí salen los montos de cada método bajo el total.
 
 // Tipos de letra disponibles (todos monoespaciados para que las columnas queden alineadas).
-// Se cargan desde Google Fonts (index.html y la ventana de impresión); si no hay internet cae a Consolas / Courier.
+// Se cargan desde vendor/fuentes (copia local, sin internet) en index.html y en la ventana de impresión.
 const TK_FUENTES = {
   jetbrains: { nombre: 'JetBrains', fam: 'JetBrains Mono' },
   plex:      { nombre: 'Plex',      fam: 'IBM Plex Mono' },
   courier:   { nombre: 'Courier',   fam: 'Courier Prime' },
   space:     { nombre: 'Space',     fam: 'Space Mono' }
 };
-const TK_FUENTES_URL = 'https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;700&family=Courier+Prime:wght@400;700&family=Space+Mono:wght@400;700&display=swap';
+const TK_FUENTES_URL = 'vendor/fuentes/fuentes.css';
 
 // Valor de contenteditable para los textos editables del ticket (solo texto plano, sin formato pegado)
 const _TK_CE = (() => {
