@@ -14,8 +14,9 @@
 <meta name="apple-mobile-web-app-title" content="BodegaPOS">
 <link rel="apple-touch-icon" href="img/icon-192.png">
 
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;700&family=Courier+Prime:wght@400;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<!-- Tipos de letra e íconos locales (la app funciona sin internet) -->
+<link rel="stylesheet" href="vendor/fuentes/fuentes.css">
+<link rel="stylesheet" href="vendor/fontawesome/css/all.min.css">
 
 <!-- Estilos (el orden importa) -->
 <link rel="stylesheet" href="css/base.css">
@@ -91,6 +92,7 @@
   <div data-incluir="vistas/modales/compras-orden.html"></div>
   <div data-incluir="vistas/modales/compras-recibir.html"></div>
   <div data-incluir="vistas/modales/compras-proveedor.html"></div>
+  <div data-incluir="vistas/modales/compras-asignar-proveedor.html"></div>
   <div data-incluir="vistas/modales/productos-categoria.html"></div>
   <div data-incluir="vistas/modales/categoria.html"></div>
   <div data-incluir="vistas/modales/caja-detalle.html"></div>
@@ -98,8 +100,8 @@
   <div data-incluir="vistas/modales/pos-acciones.html"></div>
 </div>
 
-<!-- Supabase (debe cargarse antes que los scripts de la app) -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Supabase (copia local; solo se usa si activas la sincronización en la nube) -->
+<script src="vendor/supabase.js"></script>
 <!-- Descarga las vistas, carga js/*.js en orden y arranca la app -->
 <script src="js/cargador.js"></script>
 </body>

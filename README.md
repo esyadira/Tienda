@@ -10,6 +10,9 @@ bodegapos/
 ├── manifest.json       Configuración PWA
 ├── sw.js               Service Worker (debe quedar en la raíz)
 ├── img/                Íconos de la app
+├── escritorio/         Versión instalable para Windows (Electron): main.js, instalador.nsi, construir.sh
+├── vendor/             Librerías locales para funcionar sin internet: fuentes (Sora, JetBrains Mono, IBM Plex Mono,
+│                       Courier Prime, Space Mono), Font Awesome 6.5.0 y supabase-js
 ├── vistas/             HTML de cada parte de la interfaz
 │   ├── layout/             splash, setup (primera vez), login, header, sidebar
 │   ├── paginas/            inicio (dashboard), productos, categorias, ventas, clientes,
@@ -77,6 +80,27 @@ bodegapos/
 3. Dispara `DOMContentLoaded` de nuevo, porque los scripts se cargan después del evento real y sus inicializadores lo necesitan.
 
 Para agregar una vista nueva se crea su archivo en `vistas/` y se añade su `<div data-incluir="...">` en `index.html`. Para agregar un script nuevo se añade a `SCRIPTS`.
+
+## Versión de escritorio (instalador para Windows)
+
+`escritorio/` envuelve esta misma app en un programa de Windows: `BodegaPOS-Setup.exe` instala BodegaPOS (sin permisos de administrador), crea el ícono en el escritorio y abre la app en su propia ventana, **sin navegador, sin servidor y sin internet**.
+
+- **Datos.** Quedan en `%APPDATA%\BodegaPOS` (no dentro del programa). Reinstalar, actualizar o desinstalar **no los borra**. Para pasar los datos a otra PC usa Configuración → Respaldo (exportar / importar).
+- **Actualizar.** Se genera un `Setup.exe` nuevo y se instala encima; conserva los datos.
+- **Cómo se genera.** `bash escritorio/construir.sh` (Linux con `node` y `makensis`): descarga Electron para Windows, copia la app a `resources/app/www` y compila el instalador con `instalador.nsi`. Cambia `ELECTRON_VERSION` para otra versión de Electron.
+- **`prompt()`.** Electron no lo trae; `js/escritorio.js` lo reemplaza por una ventana propia (envases, borrar todo, nombre de impresora).
+- **Impresora térmica USB (impresión directa).** Usa Web Serial; en escritorio se elige sola si hay una sola conectada. Con impresión "por navegador" se usa `--kiosk-printing` (imprime a la predeterminada sin diálogo).
+- Requiere Windows 10 u 11 de 64 bits. El instalador no está firmado: Windows SmartScreen mostrará "Windows protegió su PC" → Más información → Ejecutar de todas formas.
+
+## Funciona sin internet
+
+Todo lo que la app necesita está dentro de la carpeta (letras, íconos y librería de la nube en `vendor/`), y los datos se guardan en el navegador (`localStorage`). No se pide nada a internet para vender, comprar, imprimir tickets o ver reportes.
+
+- **Service Worker (`sw.js`).** La primera vez que se abre la app (con o sin internet, pero con el servidor encendido) guarda toda la app en el navegador. Desde ahí abre aunque no haya internet **e incluso con el servidor apagado**, siempre que se use el mismo navegador y la misma dirección (por ejemplo `http://localhost:3000`).
+- **Actualizaciones.** Con internet o servidor disponible usa siempre los archivos más nuevos; sin conexión usa los guardados. Si cambias o agregas archivos, sube el número de `CACHE_NAME` en `sw.js` y, si es un archivo nuevo, agrégalo a `PRECACHE`.
+- **Nube (Supabase, opcional).** Es lo único que necesita internet, y solo si la activas en Configuración. Si trabajas sin conexión, los cambios quedan marcados como pendientes (`bodega_sb_pendiente`) y se suben solos al volver el internet, sin que la nube pise lo hecho sin conexión.
+- **WhatsApp.** El botón de enviar pedido por WhatsApp abre wa.me, así que ese botón sí necesita internet.
+- **Ojo con los datos.** Al no haber nube de por medio, la información vive solo en ese navegador: haz respaldos seguido (Configuración → Respaldo) y no borres los datos del sitio.
 
 ## Importante
 
