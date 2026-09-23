@@ -502,9 +502,20 @@ function _tkAviso(msg, tipo) {
   else showToast(msg, tipo || 'success');
 }
 
-function guardarTicket() {
+async function guardarTicket() {
   try {
-    settings.ticket = tkCfgLeer();
+    const cfg = tkCfgLeer();
+    // Logo del ticket: igual que el logo del negocio, se sube a Storage y se guarda solo el link
+    // (si no hay nube conectada, sbSubirImagen devuelve la misma foto y se guarda local como antes).
+    if (cfg.hLogo && cfg.hLogo.startsWith('data:')) {
+      const logoAnterior = (settings.ticket && settings.ticket.hLogo) || '';
+      if (typeof sbSubirImagen === 'function') {
+        cfg.hLogo = await sbSubirImagen(cfg.hLogo, 'ticket');
+        if (logoAnterior && logoAnterior !== cfg.hLogo && typeof sbBorrarImagenAnterior === 'function') sbBorrarImagenAnterior(logoAnterior);
+      }
+    }
+    settings.ticket = cfg;
+    _tkLogo = cfg.hLogo; // que la vista previa y el panel queden con el link, no con el base64 viejo
     localStorage.setItem('bodega_settings', JSON.stringify(settings));
     if (typeof sbSyncDebounced === 'function') sbSyncDebounced();
     _tkAviso('Ticket guardado ✓', 'success');
