@@ -256,13 +256,32 @@ async function sbGuardarEnNube() {
   if (!_supabase || !_sbConectado) return;
   const cfg = sbGetConfig();
   if (!cfg) return;
+  // Red de seguridad: pase lo que pase (configuración inicial, un guardado manual, etc.),
+  // antes de subir revisamos que ningún logo se haya quedado en base64 dentro de settings.
+  // Así este es el único lugar que necesita saberlo, y no depende de que cada pantalla
+  // que toque un logo se acuerde de convertirlo por su cuenta.
+  let settingsActual;
+  try { settingsActual = JSON.parse(localStorage.getItem('bodega_settings') || '{}'); } catch (e) { settingsActual = {}; }
+  let settingsCambiaron = false;
+  if (settingsActual.negocio && settingsActual.negocio.logo && settingsActual.negocio.logo.startsWith('data:')) {
+    settingsActual.negocio.logo = await sbSubirImagen(settingsActual.negocio.logo, 'negocio');
+    settingsCambiaron = true;
+  }
+  if (settingsActual.ticket && settingsActual.ticket.hLogo && settingsActual.ticket.hLogo.startsWith('data:')) {
+    settingsActual.ticket.hLogo = await sbSubirImagen(settingsActual.ticket.hLogo, 'ticket');
+    settingsCambiaron = true;
+  }
+  if (settingsCambiaron) {
+    localStorage.setItem('bodega_settings', JSON.stringify(settingsActual));
+    if (typeof settings !== 'undefined') Object.assign(settings, settingsActual); // que la app en memoria también quede con el link
+  }
   // El historial (ventas, cajas, movimientos, devoluciones, pagos a proveedores) YA NO va aquí:
   // cada uno se sube solo (una fila) apenas se crea, con sbGuardarRegistro. Aquí solo va lo que
   // cambia por edición completa (catálogo y ajustes), que es mucho más liviano.
   const payload = {
     tienda: cfg.tienda,
     datos: JSON.stringify({ productos, clientes, proveedores, vendedores, categorias, ordenesCompra, listaCompras }),
-    settings: localStorage.getItem('bodega_settings') || '{}',
+    settings: JSON.stringify(settingsActual),
     updated_at: new Date().toISOString()
   };
   try {
