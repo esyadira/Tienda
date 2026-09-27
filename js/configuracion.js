@@ -288,10 +288,13 @@ function guardarSistema() {
     settings.sistema.margenPct  = (()=>{ const v=parseFloat(val('cfg-margen-pct')); return (isNaN(v)||v<0) ? 20 : v; })();
     settings.sistema.mensajes   = chk('cfg-mostrar-mensajes');
     settings.sistema.confirmDel = chk('cfg-confirm-del');
+    settings.funciones.fiar     = chk('cfg-funcion-fiar');
     localStorage.setItem('bodega_settings', JSON.stringify(settings));
     if (typeof sbSyncDebounced === 'function') sbSyncDebounced();
     aplicarCambiosVisuales();
     aplicarMonedaEnDOM();
+    aplicarFunciones();
+    if (typeof clearClientSel === 'function') clearClientSel(); // por si había un cliente elegido en el POS y se apagó "Fiar"
     refrescarPaginaActiva();
     showToast('Sistema guardado ✓', 'success');
 }
@@ -612,25 +615,18 @@ function cambiarContrasena() {
 
 // --- ALERTAS ---
 function toggleAlertaStock(checked) {
+    // Solo vista previa dentro del panel — se aplica de verdad al presionar "Guardar Alertas"
     const wrap = document.getElementById('cfg-stock-min-wrap');
     if (wrap) wrap.style.opacity = checked ? '1' : '0.4';
-    settings.alertas.stock = checked;
-    localStorage.setItem('bodega_settings', JSON.stringify(settings));
-    actualizarStatusAlertas();
-    updateStockBajoCount();
-    actualizarNotificaciones();
-    actualizarDashboardReal();
 }
 
 // Activa/desactiva el cálculo automático del precio de venta según el margen de ganancia por defecto.
 // Solo afecta el valor que se PRE-LLENA al crear/editar un producto; cambiarlo en un producto puntual
 // no modifica este ajuste general.
 function toggleMargenAuto(checked) {
+    // Solo vista previa dentro del panel — se aplica de verdad al presionar "Guardar Sistema"
     const wrap = document.getElementById('cfg-margen-pct-wrap');
     if (wrap) wrap.style.opacity = checked ? '1' : '.45';
-    settings.sistema.margenAuto = checked;
-    localStorage.setItem('bodega_settings', JSON.stringify(settings));
-    if (typeof sbSyncDebounced === 'function') sbSyncDebounced();
 }
 
 // --- FUNCIONES DEL SISTEMA (Preferencias > qué le muestra el sistema al usuario) ---
@@ -658,22 +654,13 @@ function aplicarFunciones() {
 
 // Handler del checkbox "Fiar a clientes" en Preferencias > Sistema
 function toggleFuncionFiar(checked) {
-    settings.funciones.fiar = checked;
-    localStorage.setItem('bodega_settings', JSON.stringify(settings));
-    if (typeof sbSyncDebounced === 'function') sbSyncDebounced();
-    aplicarFunciones();
-    if (typeof clearClientSel === 'function') clearClientSel(); // por si había un cliente elegido en el POS
+    // Solo vista previa — se aplica de verdad (menú, dashboard, POS) al presionar "Guardar Sistema"
 }
 
 function toggleAlertaDeuda(checked) {
+    // Solo vista previa dentro del panel — se aplica de verdad al presionar "Guardar Alertas"
     const wrap = document.getElementById('cfg-deuda-wrap');
     if (wrap) wrap.style.opacity = checked ? '1' : '0.4';
-    settings.alertas.deuda = checked;
-    localStorage.setItem('bodega_settings', JSON.stringify(settings));
-    actualizarStatusAlertas();
-    actualizarDeudaAltaCount();
-    actualizarNotificaciones();
-    actualizarDashboardReal();
 }
 
 function actualizarPreviewAlertaStock(val) {
@@ -801,13 +788,18 @@ function showConfig(el, panelId) {
         if (col) col.value = settings.apariencia.colorAcento || '#f59e0b';
     }
     if (panelId === 'cfg-notif') {
-        actualizarStatusAlertas();
+        // Volver a mostrar lo guardado (descarta cambios sin guardar de una apertura anterior)
         const stock = document.getElementById('cfg-alerta-stock');
         const deuda = document.getElementById('cfg-alerta-deuda');
-        if (stock) toggleAlertaStock(stock.checked);
-        if (deuda) toggleAlertaDeuda(deuda.checked);
         const minStock = document.getElementById('cfg-min-stock');
         const montoDeuda = document.getElementById('cfg-monto-deuda');
+        if (stock) stock.checked = !!settings.alertas.stock;
+        if (deuda) deuda.checked = !!settings.alertas.deuda;
+        if (minStock) minStock.value = settings.alertas.minStock;
+        if (montoDeuda) montoDeuda.value = settings.alertas.montoDeuda;
+        actualizarStatusAlertas();
+        if (stock) toggleAlertaStock(stock.checked);
+        if (deuda) toggleAlertaDeuda(deuda.checked);
         if (minStock) actualizarPreviewAlertaStock(minStock.value);
         if (montoDeuda) actualizarPreviewAlertaDeuda(montoDeuda.value);
     }
@@ -821,8 +813,22 @@ function showConfig(el, panelId) {
         cfgPagosActualizar();
     }
     if (panelId === 'cfg-sistema') {
-        actualizarInfoSistema();
+        // Volver a mostrar lo guardado (descarta cambios sin guardar de una apertura anterior)
         const moneda = document.getElementById('cfg-moneda');
+        const margenAuto = document.getElementById('cfg-margen-auto');
+        const margenPct = document.getElementById('cfg-margen-pct');
+        const mensajes = document.getElementById('cfg-mostrar-mensajes');
+        const confirmDel = document.getElementById('cfg-confirm-del');
+        const funcionFiar = document.getElementById('cfg-funcion-fiar');
+        if (moneda) moneda.value = settings.sistema.moneda;
+        if (margenAuto) margenAuto.checked = !!settings.sistema.margenAuto;
+        if (margenPct) margenPct.value = settings.sistema.margenPct;
+        if (mensajes) mensajes.checked = !!settings.sistema.mensajes;
+        if (confirmDel) confirmDel.checked = !!settings.sistema.confirmDel;
+        if (funcionFiar) funcionFiar.checked = !!settings.funciones.fiar;
+        const wrapMargen = document.getElementById('cfg-margen-pct-wrap');
+        if (wrapMargen) wrapMargen.style.opacity = settings.sistema.margenAuto ? '1' : '.45';
+        actualizarInfoSistema();
         if (moneda) actualizarPreviewMoneda(moneda.value);
     }
 }

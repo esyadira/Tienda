@@ -1,4 +1,14 @@
 // ========================================
+// SEGURIDAD DE TEXTO LIBRE
+// ========================================
+// Quita los símbolos < y > de un texto escrito por el usuario (nombre de producto,
+// cliente, vendedor, proveedor). Esos símbolos, si no se filtran, pueden romper el
+// HTML de las tablas o —en el peor caso— ejecutar código en la pantalla de otro
+// vendedor que use el sistema. Se aplica al guardar, no al mostrar, para no tener
+// que tocar cada tabla/reporte que muestra el nombre.
+function limpiarTexto(s){ return (s==null?'':String(s)).replace(/[<>]/g,''); }
+
+// ========================================
 // MODALS
 // ========================================
 function openModal(id){

@@ -17,17 +17,19 @@ function renderReportes(panelId) {
     const activeBtn = document.querySelector('.rep-tab-btn.active');
     if (activeBtn) {
       const m = activeBtn.getAttribute('onclick').match(/'([^']+)'/);
-      panelId = m ? m[1] : 'rep-vendedores';
+      panelId = m ? m[1] : 'rep-ventas';
     } else {
-      panelId = 'rep-vendedores';
+      panelId = 'rep-ventas';
     }
   }
 
-  if (panelId === 'rep-dia') renderRepDia(fecha);
+  if (panelId === 'rep-ventas') renderRepVentas();
+  else if (panelId === 'rep-dia') renderRepDia(fecha);
   else if (panelId === 'rep-vendedores') renderRepVendedores();
   else if (panelId === 'rep-cerveza') renderRepProducto(fecha, 'cerveza');
   else if (panelId === 'rep-helado') renderRepProducto(fecha, 'helado');
   else if (panelId === 'rep-yape') renderRepYape(fecha);
+  else if (panelId === 'rep-tarjeta') renderRepTarjeta(fecha);
   else if (panelId === 'rep-inventario') renderRepInventario(fecha);
   else if (panelId === 'rep-salidas') renderRepSalidas();
 }

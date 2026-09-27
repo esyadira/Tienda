@@ -54,7 +54,7 @@ function doLogin(){
       const permMap = {
         'Dashboard': 'dashboard', 'Punto de Venta': 'ventas', 'Productos': 'productos',
         'Clientes': 'clientes', 'Proveedores': 'compras', 'Reportes': 'reportes',
-        'Vendedores': 'vendedores', 'Configuración': 'configuracion'
+        'Vendedores': 'vendedores', 'Configuración': 'configuracion', 'Corte': 'corte'
       };
       document.querySelectorAll('.nav-item').forEach(item => {
         const onclick = item.getAttribute('onclick') || '';
@@ -78,7 +78,7 @@ function doLogin(){
 // SETUP INICIAL (Primera vez)
 // ========================================
 const SETUP_KEY = 'bodega_setup_completado';
-const SETUP_PERMS_ALL = ['Dashboard','Punto de Venta','Productos','Clientes','Proveedores','Reportes','Vendedores','Configuración'];
+const SETUP_PERMS_ALL = ['Dashboard','Punto de Venta','Productos','Clientes','Proveedores','Reportes','Vendedores','Configuración','Corte'];
 
 function checkSetup() {
   const setupDone = localStorage.getItem(SETUP_KEY);
@@ -98,7 +98,7 @@ function renderSetupPerms() {
     'Dashboard': 'fa-gauge-high', 'Punto de Venta': 'fa-cash-register',
     'Productos': 'fa-box', 'Clientes': 'fa-users',
     'Proveedores': 'fa-truck', 'Reportes': 'fa-chart-bar',
-    'Vendedores': 'fa-id-badge', 'Configuración': 'fa-gear'
+    'Vendedores': 'fa-id-badge', 'Configuración': 'fa-gear', 'Corte': 'fa-scissors'
   };
   grid.innerHTML = SETUP_PERMS_ALL.map(p => `
     <label class="setup-perm-item locked">

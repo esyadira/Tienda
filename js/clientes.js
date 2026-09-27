@@ -38,8 +38,10 @@ function renderClients(filteredList){
 
 function saveCliente(){
   const editId = parseInt(document.getElementById('editClienteId').value)||0;
-  const nombre = ((document.getElementById('cNombre').value||'Nuevo')+' '+(document.getElementById('cApellido').value||'')).trim();
-  const tel = document.getElementById('cTel').value||'---';
+  const nombreInput = limpiarTexto(document.getElementById('cNombre').value.trim());
+  const apellidoInput = limpiarTexto(document.getElementById('cApellido').value.trim());
+  const nombre = (nombreInput || 'Nuevo') + (apellidoInput ? ' ' + apellidoInput : '');
+  const tel = document.getElementById('cTel').value.trim()||'---';
   if(editId){
     const c = clientes.find(x=>x.id===editId);
     if(c){ c.nombre=nombre; c.tel=tel; }

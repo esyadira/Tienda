@@ -77,6 +77,7 @@ function guardarTodoEnLocalStorage() {
     localStorage.setItem('bodega_pagos_proveedores', JSON.stringify(pagosProveedoresHistorial));
     localStorage.setItem('bodega_categorias', JSON.stringify(categorias));
     localStorage.setItem('bodega_cajas', JSON.stringify(cajasHistorial));
+    localStorage.setItem('bodega_cierres_turno', JSON.stringify(cierresTurno));
     localStorage.setItem('bodega_movimientos_caja', JSON.stringify(movimientosCaja));
     localStorage.setItem('bodega_ventas_pendientes', JSON.stringify(ventasPendientes));
     localStorage.setItem('bodega_devoluciones', JSON.stringify(devolucionesHistorial));

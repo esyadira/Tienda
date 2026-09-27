@@ -206,6 +206,10 @@ function removeFromCart(id){carrito=carrito.filter(c=>c.id!==id);renderCart();}
 function changeQty(id,delta){
   const item=carrito.find(c=>c.id===id);
   if(!item)return;
+  if(delta>0 && !item.esPesoItem){
+    const prod=productos.find(p=>p.id===id);
+    if(prod && item.qty>=prod.stock) return showToast('Stock insuficiente','error');
+  }
   item.qty+=delta;
   if(item.qty<=0)carrito=carrito.filter(c=>c.id!==id);
   else recalcPrecioItem(item);

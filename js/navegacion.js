@@ -102,24 +102,31 @@ function showPage(pageId) {
   // Al entrar a Configuración se muestra siempre el inicio con los accesos
   if (pageId === 'configuracion' && typeof cfgVolver === 'function') cfgVolver();
 
+  // Al entrar a Corte se recalcula todo con los datos más recientes
+  if (pageId === 'corte' && typeof corteEntrando === 'function') corteEntrando();
+
   // Inicializar fecha y renderizar al entrar a Reportes
   if (pageId === 'reportes') {
     const inp = document.getElementById('repFechaInput');
     if (inp) inp.value = new Date().toLocaleDateString('en-CA');
     _filtroMetodoCerveza = 'todos';
     _filtroMetodoYape = 'todos';
+    _filtroMetodoTarjeta = 'todos';
     _filtroMetodoEfectivo = 'todos';
     repVendFiltroActivo = null;
     document.querySelectorAll('.rep-tab-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.rep-panel').forEach(p => p.style.display = 'none');
     const firstTabBtn = document.querySelector('.rep-tab-btn');
     if (firstTabBtn) firstTabBtn.classList.add('active');
-    const vendPanel = document.getElementById('rep-vendedores');
-    if (vendPanel) vendPanel.style.display = 'flex';
-    renderReportes('rep-vendedores');
+    const ventasPanel = document.getElementById('rep-ventas');
+    if (ventasPanel) ventasPanel.style.display = 'flex';
+    const extraToolbar = document.getElementById('repToolbarDiaExtra');
+    if (extraToolbar) extraToolbar.style.display = 'none';
+    renderReportes('rep-ventas');
   } else {
     _filtroMetodoCerveza = 'todos';
     _filtroMetodoYape = 'todos';
+    _filtroMetodoTarjeta = 'todos';
     _filtroMetodoEfectivo = 'todos';
     repVendFiltroActivo = null;
   }

@@ -5,12 +5,16 @@ function showReporte(btn, panelId) {
   // Limpiar filtros de KPI al cambiar de panel
   _filtroMetodoCerveza = 'todos';
   _filtroMetodoYape = 'todos';
+  _filtroMetodoTarjeta = 'todos';
   _filtroMetodoEfectivo = 'todos';
   repVendFiltroActivo = null;
   document.querySelectorAll('.rep-tab-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.rep-panel').forEach(p => p.style.display = 'none');
   btn.classList.add('active');
   document.getElementById(panelId).style.display = 'flex';
+  // El selector de día único + "Eliminar día" solo aplican a los reportes de un día concreto
+  const extra = document.getElementById('repToolbarDiaExtra');
+  if (extra) extra.style.display = (panelId === 'rep-ventas' || panelId === 'rep-vendedores') ? 'none' : 'flex';
   renderReportes(panelId);
 }
 
@@ -143,11 +147,13 @@ function renderReportes(panelId) {
   const fecha = getRepFecha();
   const label = document.getElementById('repFechaLabel');
   if (label) label.textContent = getRepFechaLabel(fecha);
-  if (!panelId) panelId = 'rep-vendedores';
-  if (panelId === 'rep-dia') renderRepDia(fecha);
+  if (!panelId) panelId = 'rep-ventas';
+  if (panelId === 'rep-ventas') renderRepVentas();
+  else if (panelId === 'rep-dia') renderRepDia(fecha);
   else if (panelId === 'rep-cerveza') renderRepProducto(fecha, 'cerveza');
   else if (panelId === 'rep-helado') renderRepProducto(fecha, 'helado');
   else if (panelId === 'rep-yape') renderRepYape(fecha);
+  else if (panelId === 'rep-tarjeta') renderRepTarjeta(fecha);
   else if (panelId === 'rep-inventario') renderRepInventario(fecha);
   else if (panelId === 'rep-vendedores') renderRepVendedores();
   else if (panelId === 'rep-salidas') renderRepSalidas();
@@ -775,6 +781,210 @@ function renderRepYape(fecha) {
   const yapeCountEl2 = document.getElementById('repYapeCant');
   const countableFilas = todasLasFilas.filter(f => !f.tipo.startsWith('separador'));
   if (yapeCountEl2) yapeCountEl2.textContent = `${countableFilas.length} registro${countableFilas.length!==1?'s':''}`;
+  tbody.innerHTML = todasLasFilas.sort((a,b)=>b.timestamp-a.timestamp).map(f=>f.html).join('');
+}
+
+// ========================================
+// REPORTE DE TARJETA (mismo esquema que Yape)
+// ========================================
+function renderRepTarjeta(fecha) {
+  const vendSel = document.getElementById('repTarjetaVendSelect');
+  if (vendSel) {
+    const currentVal = vendSel.value;
+    const todosVends = [...new Set([...ventasHistorial.map(v => v.vendedor || 'Admin'), ...(vendedores||[]).map(v => (v.nombre + (v.apellido?' '+v.apellido:'')).trim()), 'Admin'])].sort();
+    vendSel.innerHTML = '<option value="todos">Todos los usuarios</option>';
+    todosVends.forEach(v => { const o = document.createElement('option'); o.value = v; o.textContent = v; vendSel.appendChild(o); });
+    if ([...vendSel.options].some(o => o.value === currentVal)) vendSel.value = currentVal;
+    else vendSel.value = 'todos';
+  }
+  const vendFiltro = vendSel ? vendSel.value : 'todos';
+
+  const esMismaFecha = v => {
+    if (v.fechaISO === fecha) return true;
+    if (v.fecha) {
+      const parts = v.fecha.split('/');
+      if (parts.length === 3) {
+        const d = new Date(parseInt(parts[2]), parseInt(parts[1])-1, parseInt(parts[0]));
+        return d.toLocaleDateString('en-CA') === fecha;
+      }
+    }
+    return false;
+  };
+  const esMismaFechaP = p => {
+    if (p.fechaISO === fecha) return true;
+    if (p.fecha) {
+      const parts = p.fecha.split('/');
+      if (parts.length === 3) {
+        const d = new Date(parseInt(parts[2]), parseInt(parts[1])-1, parseInt(parts[0]));
+        return d.toLocaleDateString('en-CA') === fecha;
+      }
+    }
+    return false;
+  };
+
+  const ventasTarjeta = ventasHistorial.filter(v => esVentaDeMetodo(v, 'tarjeta') && !v.esPagoPedidoProv && esMismaFecha(v) && (vendFiltro === 'todos' || (v.vendedor || 'Admin') === vendFiltro));
+  const abonosTarjeta = [];
+  clientes.forEach(c => {
+    (c.pagos || []).filter(p => p.metodo === 'tarjeta' && esMismaFechaP(p) && (vendFiltro === 'todos' || (p.vendedor || 'Admin') === vendFiltro)).forEach(p => {
+      abonosTarjeta.push({ cliente: c.nombre, fecha: p.fecha||'—', fechaISO: p.fechaISO||'', hora: p.hora||'—', monto: p.monto, tipo: 'abono' });
+    });
+  });
+  const pagosProveedoresTarjeta = pagosProveedoresHistorial.filter(pp => pp.metodo === 'tarjeta' && esMismaFechaP(pp) && (vendFiltro === 'todos' || (pp.vendedor || 'Admin') === vendFiltro));
+
+  const totalVentasTarjeta = ventasTarjeta.reduce((a, v) => a + desgloseVenta(v).tarjeta, 0);
+  const totalAbonosTarjeta = abonosTarjeta.reduce((a, p) => a + p.monto, 0);
+  const totalPagosProvTarjeta = pagosProveedoresTarjeta.reduce((a, pp) => a + parseFloat(pp.monto || 0), 0);
+  const totalNetoTarjeta = totalVentasTarjeta + totalAbonosTarjeta - totalPagosProvTarjeta;
+
+  // Calcular fiado/semipagado por producto (FIFO)
+  let totalFiadoTarjeta = 0, totalSemiTarjeta = 0;
+  ventasTarjeta.forEach(v => {
+    if (v.metodoPago === 'mixto') return;
+    const pagado = Math.min(v.pagado ?? v.total ?? 0, v.total ?? 0);
+    const esFiadoTotal = pagado === 0 && (v.total||0) > 0;
+    const esFiadoParcial = pagado > 0 && pagado < (v.total||0);
+    const prods = v.items || v.productos || [];
+    prods.forEach((p, pIdx) => {
+      const subtotal = p.precio * (p.cant || p.qty || 1);
+      if (esFiadoTotal) { totalFiadoTarjeta += subtotal; return; }
+      if (!esFiadoParcial) return;
+      let pagadoAntes = 0;
+      for (let i = 0; i < pIdx; i++) { const pr = prods[i]; pagadoAntes += pr.precio*(pr.cant||pr.qty||1); }
+      const cubierto = Math.min(Math.max(0, pagado - pagadoAntes), subtotal);
+      const pendiente = subtotal - cubierto;
+      if (cubierto <= 0.004) totalFiadoTarjeta += subtotal;
+      else if (pendiente > 0.004) totalSemiTarjeta += pendiente;
+    });
+  });
+
+  const mkTarjeta = (fv, bg, ac, ic, lbl, val, sub) => {
+    const isA = _filtroMetodoTarjeta === fv;
+    return `<div onclick="_filtroMetodoTarjeta='${fv}';renderReportes('rep-tarjeta');" style="background:var(--surface);border:2px solid ${isA?ac:'var(--border)'};border-radius:var(--radius);padding:16px;position:relative;overflow:hidden;cursor:pointer;transition:all 0.15s;${isA?`box-shadow:0 0 0 3px ${ac}22;`:''}">
+      <div style="position:absolute;inset:0;background:linear-gradient(135deg,${bg},transparent);pointer-events:none;"></div>
+      <div style="width:34px;height:34px;border-radius:9px;background:${bg.replace('0.06','0.15')};color:${ac};display:flex;align-items:center;justify-content:center;font-size:14px;margin-bottom:10px;">${ic}</div>
+      <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;font-weight:700;margin-bottom:3px;">${lbl}${isA?' ✓':''}</div>
+      <div style="font-size:19px;font-weight:800;color:${ac};font-family:'JetBrains Mono',monospace;">${val}</div>
+      <div style="font-size:10px;color:var(--text3);margin-top:3px;">${sub}</div>
+    </div>`;
+  };
+  const kpiPendienteTarjeta = (totalFiadoTarjeta > 0 || totalSemiTarjeta > 0) ? `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;position:relative;overflow:hidden;">
+      <div style="position:absolute;inset:0;background:linear-gradient(135deg,rgba(239,68,68,0.06),transparent);pointer-events:none;"></div>
+      <div style="width:34px;height:34px;border-radius:9px;background:rgba(239,68,68,0.15);color:var(--danger);display:flex;align-items:center;justify-content:center;font-size:14px;margin-bottom:10px;"><i class="fa fa-clock-rotate-left"></i></div>
+      <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;font-weight:700;margin-bottom:3px;">Pendiente de Cobro</div>
+      <div style="font-size:19px;font-weight:800;color:var(--danger);font-family:'JetBrains Mono',monospace;">${moneda()} ${(totalFiadoTarjeta + totalSemiTarjeta).toFixed(2)}</div>
+      <div style="font-size:10px;color:var(--text3);margin-top:3px;">Fiado: ${moneda()} ${totalFiadoTarjeta.toFixed(2)} · Semi: ${moneda()} ${totalSemiTarjeta.toFixed(2)}</div>
+    </div>` : '';
+  document.getElementById('repTarjetaSummary').innerHTML =
+    mkTarjeta('todos','rgba(14,165,233,0.06)','#0ea5e9','<i class="fa fa-credit-card"></i>','Total Neto Tarjeta',`${moneda()} ${totalNetoTarjeta.toFixed(2)}`,'Ventas + Abonos - Proveedores') +
+    mkTarjeta('ventas','rgba(245,158,11,0.06)','#f59e0b','<i class="fa fa-receipt"></i>','Ventas Tarjeta',`${moneda()} ${totalVentasTarjeta.toFixed(2)}`,`${ventasTarjeta.length} venta(s)`) +
+    mkTarjeta('abonos','rgba(59,130,246,0.06)','#3b82f6','<i class="fa fa-hand-holding-dollar"></i>','Abonos de Deuda',`${moneda()} ${totalAbonosTarjeta.toFixed(2)}`,`${abonosTarjeta.length} abono(s)`) +
+    mkTarjeta('proveedores','rgba(249,115,22,0.06)','var(--warning)','<i class="fa fa-truck"></i>','Pagos Proveedores',`${moneda()} ${totalPagosProvTarjeta.toFixed(2)}`,`${pagosProveedoresTarjeta.length} pago(s)`) +
+    kpiPendienteTarjeta;
+
+  const tbody = document.getElementById('repTarjetaBody');
+  const totalEl = document.getElementById('repTarjetaTotalAmt');
+  if (totalEl) totalEl.textContent = `${moneda()} ${totalNetoTarjeta.toFixed(2)}`;
+
+  if (!ventasTarjeta.length && !abonosTarjeta.length && !pagosProveedoresTarjeta.length) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text3);"><i class="fa fa-credit-card" style="font-size:24px;display:block;margin-bottom:8px;opacity:0.3;"></i>Sin movimientos con Tarjeta registrados</td></tr>`;
+    const tarjetaCountEl = document.getElementById('repTarjetaCant');
+    if (tarjetaCountEl) tarjetaCountEl.textContent = '0 registros';
+    return;
+  }
+
+  // Filas por producto con FIFO
+  const filasVentas = [];
+  ventasTarjeta.forEach(v => {
+    if (v.metodoPago === 'mixto') { filasVentas.push({ tipo:'venta', timestamp: _tsVenta(v.fechaISO, v.hora), html: filaMixtoHTML(v, 'tarjeta') }); return; }
+    const pagado = Math.min(v.pagado ?? v.total ?? 0, v.total ?? 0);
+    const esFiadoTotal = pagado === 0 && (v.total||0) > 0;
+    const esFiadoParcial = pagado > 0 && pagado < (v.total||0);
+    const prods = v.items || v.productos || [];
+    prods.forEach((p, pIdx) => {
+      const subtotal = p.precio * (p.cant || p.qty || 1);
+      let cubierto = subtotal;
+      if (esFiadoParcial) {
+        let pagadoAntes = 0;
+        for (let i = 0; i < pIdx; i++) { const pr = prods[i]; pagadoAntes += pr.precio*(pr.cant||pr.qty||1); }
+        cubierto = Math.min(Math.max(0, pagado - pagadoAntes), subtotal);
+      }
+      const pendiente = subtotal - cubierto;
+      let rowBg, montoHTML;
+      if (esFiadoTotal) {
+        rowBg = 'background:rgba(100,116,139,0.12);';
+        montoHTML = `<span style="color:var(--text3);text-decoration:line-through;font-weight:600;">${moneda()} ${subtotal.toFixed(2)}</span>`;
+      } else if (esFiadoParcial && cubierto < subtotal - 0.004 && cubierto > 0.004) {
+        rowBg = 'background:rgba(14,165,233,0.08);';
+        montoHTML = `<div style="display:flex;justify-content:flex-end;align-items:center;gap:6px;"><span style="font-weight:700;color:#0ea5e9;">${moneda()} ${cubierto.toFixed(2)}</span><span style="color:var(--text3);text-decoration:line-through;font-size:12px;">${moneda()} ${subtotal.toFixed(2)}</span></div>`;
+      } else if (esFiadoParcial && cubierto <= 0.004) {
+        rowBg = 'background:rgba(100,116,139,0.12);';
+        montoHTML = `<span style="color:var(--text3);text-decoration:line-through;font-weight:600;">${moneda()} ${subtotal.toFixed(2)}</span>`;
+      } else {
+        rowBg = 'background:var(--surface);';
+        montoHTML = `<span style="font-weight:700;color:#0ea5e9;">${moneda()} ${subtotal.toFixed(2)}</span>`;
+      }
+      filasVentas.push({ tipo:'venta', timestamp: _tsVenta(v.fechaISO, v.hora),
+        html:`<tr style="${rowBg}">
+          <td style="font-size:12px;color:var(--text3);">${v.fecha||'—'}</td>
+          <td style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text3);">${v.hora||'—'}</td>
+          <td style="font-weight:500;">${v.cliente||'Público General'}</td>
+          <td style="font-size:12px;color:var(--text2);">${p.nombre} x${p.cant||p.qty||1}</td>
+          <td><span class="badge" style="background:rgba(14,165,233,0.15);color:#0ea5e9;">Tarjeta</span></td>
+          <td style="text-align:right;">${montoHTML}</td>
+          <td style="text-align:center;"><button onclick="eliminarVentaIndividual(${v.id})" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:var(--danger);border-radius:6px;padding:3px 7px;cursor:pointer;font-size:11px;" title="Eliminar"><i class="fa fa-trash"></i></button></td>
+        </tr>`
+      });
+    });
+  });
+
+  const filasAbonos = [];
+  if (abonosTarjeta.length > 0) {
+    filasAbonos.push({ tipo:'separador_abonos', timestamp:0, html:`<tr style="background:rgba(59,130,246,0.06);"><td colspan="7" style="padding:8px 18px;border-top:2px dashed var(--border);border-bottom:1px solid var(--border);font-size:11px;color:#0ea5e9;font-weight:700;text-transform:uppercase;letter-spacing:1px;"><i class="fa fa-hand-holding-dollar" style="margin-right:8px;"></i> ABONOS DE DEUDA</td></tr>` });
+    abonosTarjeta.forEach(p => filasAbonos.push({ tipo:'abono', timestamp: _tsVenta(p.fechaISO, p.hora),
+      html:`<tr style="background:rgba(14,165,233,0.04);">
+        <td style="font-size:12px;color:var(--text3);">${p.fecha}</td>
+        <td style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text3);">${p.hora}</td>
+        <td style="font-weight:500;">${p.cliente}</td>
+        <td style="font-size:12px;color:#0ea5e9;"><i class="fa fa-hand-holding-dollar"></i> Abono de deuda</td>
+        <td><span class="badge" style="background:rgba(14,165,233,0.15);color:#0ea5e9;">Tarjeta</span></td>
+        <td style="text-align:right;"><span style="font-weight:700;color:#0ea5e9;">+ ${moneda()} ${p.monto.toFixed(2)}</span></td>
+        <td style="text-align:center;"><button onclick="eliminarAbonoIndividual(${JSON.stringify(p.cliente)}, ${JSON.stringify(p.fechaISO)}, ${p.monto}, ${JSON.stringify(p.hora)})" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:var(--danger);border-radius:6px;padding:3px 7px;cursor:pointer;font-size:11px;" title="Eliminar abono"><i class="fa fa-trash"></i></button></td>
+      </tr>`
+    }));
+  }
+
+  const filasProveedores = [];
+  if (pagosProveedoresTarjeta.length > 0) {
+    filasProveedores.push({ tipo:'separador_prov', timestamp:0, html:`<tr style="background:rgba(249,115,22,0.06);"><td colspan="7" style="padding:8px 18px;border-top:2px dashed var(--border);border-bottom:1px solid var(--border);font-size:11px;color:var(--warning);font-weight:700;text-transform:uppercase;letter-spacing:1px;"><i class="fa fa-truck" style="margin-right:8px;"></i> PAGOS A PROVEEDORES</td></tr>` });
+    pagosProveedoresTarjeta.forEach(pp => {
+      const itemsTxt = (pp.items||[]).map(it=>`${it.nombre} x${it.qty}`).join(', ')||'Pedido';
+      filasProveedores.push({ tipo:'pago_prov', timestamp: _tsVenta(pp.fechaISO, pp.hora),
+        html:`<tr style="background:rgba(249,115,22,0.04);">
+          <td style="font-size:12px;color:var(--text3);">${pp.fecha||'—'}</td>
+          <td style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text3);">${pp.hora||'—'}</td>
+          <td style="font-weight:500;">${pp.proveedor}</td>
+          <td style="font-size:12px;color:var(--warning);"><i class="fa fa-truck"></i> ${itemsTxt}</td>
+          <td><span class="badge" style="background:rgba(14,165,233,0.15);color:#0ea5e9;">Tarjeta</span></td>
+          <td style="text-align:right;"><span style="font-weight:700;color:var(--warning);">- ${moneda()} ${parseFloat(pp.monto).toFixed(2)}</span></td>
+          <td style="text-align:center;"><button onclick="eliminarPagoProvIndividual(${JSON.stringify(pp.fechaISO)}, ${JSON.stringify(pp.proveedor)}, ${parseFloat(pp.monto)}, ${JSON.stringify(pp.hora||'—')})" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:var(--danger);border-radius:6px;padding:3px 7px;cursor:pointer;font-size:11px;" title="Eliminar pago proveedor"><i class="fa fa-trash"></i></button></td>
+        </tr>`
+      });
+    });
+  }
+
+  let todasLasFilas = [...filasVentas, ...filasAbonos, ...filasProveedores];
+  if (_filtroMetodoTarjeta !== 'todos') {
+    todasLasFilas = todasLasFilas.filter(f => {
+      if (_filtroMetodoTarjeta === 'ventas') return f.tipo === 'venta';
+      if (_filtroMetodoTarjeta === 'abonos') return f.tipo === 'abono';
+      if (_filtroMetodoTarjeta === 'proveedores') return f.tipo === 'pago_prov';
+      return true;
+    });
+  }
+  const tarjetaCountEl2 = document.getElementById('repTarjetaCant');
+  const countableFilasT = todasLasFilas.filter(f => !f.tipo.startsWith('separador'));
+  if (tarjetaCountEl2) tarjetaCountEl2.textContent = `${countableFilasT.length} registro${countableFilasT.length!==1?'s':''}`;
   tbody.innerHTML = todasLasFilas.sort((a,b)=>b.timestamp-a.timestamp).map(f=>f.html).join('');
 }
 

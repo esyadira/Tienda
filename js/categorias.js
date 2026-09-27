@@ -1,4 +1,11 @@
 // FUNCIONES DE CATEGORÍAS
+function clearCatFilter(){
+  const inp = document.getElementById('catSearchInput');
+  if (!inp) return;
+  inp.value = '';
+  filterTable(inp, 'catTable');
+}
+
 function renderCategorias() {
   const tb = document.getElementById('catTbody');
   const stats = document.getElementById('catStatsGrid');
@@ -70,7 +77,7 @@ function verProductosDeCategoria(cat) {
 
 function saveCategoria(){
   const original = document.getElementById('editCatOriginal').value;
-  const nombre = document.getElementById('catNombre').value.trim();
+  const nombre = limpiarTexto(document.getElementById('catNombre').value.trim());
   if(!nombre) return showToast('Ingresa un nombre','error');
   if(original){
     // Editing existing

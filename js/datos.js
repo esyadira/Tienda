@@ -54,6 +54,7 @@ let listaCompras = datosLocales.listaCompras || [];     // Compras: lista de lo 
 let carrito = [];
 let ventasHistorial = JSON.parse(localStorage.getItem('bodega_ventas_historial') || '[]');
 let cajasHistorial = JSON.parse(localStorage.getItem('bodega_cajas') || '[]');
+let cierresTurno = JSON.parse(localStorage.getItem('bodega_cierres_turno') || '[]');
 let pagosProveedoresHistorial = JSON.parse(localStorage.getItem('bodega_pagos_proveedores') || '[]');
 let selectedTurno = '';
 let currentUser = null;

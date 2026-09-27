@@ -4,6 +4,7 @@
 let _invRepData = [];
 let _filtroMetodoCerveza = 'todos';
 let _filtroMetodoYape = 'todos';
+let _filtroMetodoTarjeta = 'todos';
 let _filtroMetodoEfectivo = 'todos';
 function renderRepInventario(fecha) {
   if (!fecha) fecha = getRepFecha();
@@ -190,7 +191,7 @@ function limpiarFiltrosReportes() {
   // Restaura la fecha al día de hoy y vuelve al tab principal
   const hoy = new Date().toISOString().split('T')[0];
   document.getElementById('repFechaInput').value = hoy;
-  renderReportes('rep-cerveza');
+  renderReportes('rep-ventas');
   // Activa visualmente el primer tab
   document.querySelectorAll('.rep-tab-btn').forEach((btn, i) => {
     btn.classList.toggle('active', i === 0);
@@ -204,7 +205,7 @@ function limpiarHistorialVentas() {
   if (typeof sbVaciarTablaHistorial === 'function') sbVaciarTablaHistorial('ventasHistorial');
   guardarTodoEnLocalStorage();
   actualizarDashboardReal();
-  renderReportes('rep-cerveza');
+  renderReportes('rep-ventas');
   showToast('Historial limpiado', 'success');
 }
 
@@ -228,10 +229,15 @@ function exportarReporteActivo() {
   const tabActivo = document.querySelector('.rep-tab-btn.active');
   if (!tabActivo) return;
   const match = tabActivo.getAttribute('onclick').match(/'([^']+)'/);
-  const panel = match ? match[1] : 'rep-cerveza';
+  const panel = match ? match[1] : 'rep-ventas';
   const fecha = getRepFecha();
   const now = new Date().toLocaleDateString('es-PE');
   const fechaLabel = getRepFechaLabel(fecha);
+
+  if (panel === 'rep-ventas') {
+    if (typeof repvExportar === 'function') repvExportar();
+    return;
+  }
 
   if (panel === 'rep-cerveza' || panel === 'rep-helado') {
     const tipo = panel === 'rep-cerveza' ? 'cerveza' : 'helado';
@@ -263,6 +269,19 @@ function exportarReporteActivo() {
     const thead = '<th>Hora</th><th>Cliente</th><th>Productos</th><th>Método</th><th>Total</th>';
     const totales = `<tr class="total-row"><td colspan="4" style="text-align:right;">TOTAL YAPE</td><td>${moneda()} ${total.toFixed(2)}</td></tr>`;
     _descargarXls(_xlsBase('📱 Reporte Yape', `Exportado: ${now} · ${ventasYape.length} ventas + ${abonosYape.length} abonos`, thead, allRows, totales), `Reporte_Yape_${fecha}.xls`);
+
+  } else if (panel === 'rep-tarjeta') {
+    const ventasTarjeta = ventasHistorial.filter(v => esVentaDeMetodo(v, 'tarjeta'));
+    const abonosTarjeta = [];
+    clientes.forEach(cl => (cl.pagos||[]).filter(p=>p.metodo==='tarjeta').forEach(p=>abonosTarjeta.push({cliente:cl.nombre,hora:p.hora||'—',monto:p.monto||0})));
+    const allRowsT = [
+      ...ventasTarjeta.map(v=>{const prods=(v.items||v.productos||[]).map(p=>`${p.nombre} x${p.cant||p.qty||1}`).join(', ');return `<tr><td>${v.hora||'—'}</td><td>${v.cliente||'—'}</td><td>${prods}</td><td>${etiquetaMetodoExport(v,'tarjeta')}</td><td style="text-align:right;">${moneda()} ${montoMetodoExport(v,'tarjeta').toFixed(2)}</td></tr>`;}),
+      ...abonosTarjeta.map(ab=>`<tr><td>${ab.hora}</td><td>${ab.cliente}</td><td>Abono de deuda</td><td>Tarjeta</td><td style="text-align:right;color:#0ea5e9;">${moneda()} ${ab.monto.toFixed(2)}</td></tr>`)
+    ].join('');
+    const totalT = ventasTarjeta.reduce((a,v)=>a+montoMetodoExport(v,'tarjeta'),0) + abonosTarjeta.reduce((a,ab)=>a+ab.monto,0);
+    const theadT = '<th>Hora</th><th>Cliente</th><th>Productos</th><th>Método</th><th>Total</th>';
+    const totalesT = `<tr class="total-row"><td colspan="4" style="text-align:right;">TOTAL TARJETA</td><td>${moneda()} ${totalT.toFixed(2)}</td></tr>`;
+    _descargarXls(_xlsBase('💳 Reporte Tarjeta', `Exportado: ${now} · ${ventasTarjeta.length} ventas + ${abonosTarjeta.length} abonos`, theadT, allRowsT, totalesT), `Reporte_Tarjeta_${fecha}.xls`);
 
   } else if (panel === 'rep-inventario') {
     const ventasEf = ventasHistorial.filter(v => esVentaDeMetodo(v, 'efectivo') && !v.esPagoPedidoProv);

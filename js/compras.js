@@ -406,7 +406,7 @@ function cAsignarProvElegir(id) {
 }
 
 function cAsignarProvNuevo(nombre) {
-  nombre = nombre.trim(); if (!nombre) return;
+  nombre = limpiarTexto(nombre.trim()); if (!nombre) return;
   if (proveedores.some(p => p.empresa.trim().toLowerCase() === nombre.toLowerCase())) return cAsignarProvElegir(proveedores.find(p => p.empresa.trim().toLowerCase() === nombre.toLowerCase()).id);
   const p = { id: cNuevoId(), empresa: nombre, ruc: '', contacto: '', tel: '', email: '', notas: '', emoji: '🏭', img: '', pedidos: [], fechaCreacion: new Date().toISOString() };
   proveedores.push(p);
@@ -700,7 +700,7 @@ function cOrdProvElegir(nombre) {
   cId('cpOrdProvDd').style.display = 'none';
 }
 function cOrdProvNuevo(nombre) {
-  nombre = nombre.trim(); if (!nombre) return;
+  nombre = limpiarTexto(nombre.trim()); if (!nombre) return;
   if (!proveedores.some(p => p.empresa.trim().toLowerCase() === nombre.toLowerCase())) {
     proveedores.push({ id: cNuevoId(), empresa: nombre, ruc: '', contacto: '', tel: '', email: '', notas: '', emoji: '🏭', img: '', pedidos: [], fechaCreacion: new Date().toISOString() });
     cGuardar();
@@ -981,7 +981,7 @@ function cPvRenderProds() {
 function cPvToggle(id, on) { if (on) _cPv.sel.add(id); else _cPv.sel.delete(id); cId('cpPvCount').textContent = `${_cPv.sel.size} seleccionado${_cPv.sel.size !== 1 ? 's' : ''}`; }
 
 function cPvGuardar() {
-  const nombre = cId('cpPvNombre').value.trim();
+  const nombre = limpiarTexto(cId('cpPvNombre').value.trim());
   if (!nombre) return showToast('Ingresa el nombre del proveedor', 'error');
   if (proveedores.some(p => p.id !== _cPv.id && p.empresa.trim().toLowerCase() === nombre.toLowerCase())) return showToast('Ya tienes un proveedor con ese nombre', 'error');
   const datos = { ruc: cId('cpPvRuc').value.trim(), contacto: cId('cpPvContacto').value.trim(), tel: cId('cpPvTel').value.trim(), email: cId('cpPvEmail').value.trim(), notas: cId('cpPvNotas').value.trim() };

@@ -45,8 +45,8 @@ function selectTurno(el,t){
 }
 
 async function addVendedor(){
-  const nombre=document.getElementById('vNombre').value.trim()||'Vendedor';
-  const apellido=document.getElementById('vApellido').value.trim()||'Nuevo';
+  const nombre=limpiarTexto(document.getElementById('vNombre').value.trim())||'Vendedor';
+  const apellido=limpiarTexto(document.getElementById('vApellido').value.trim())||'Nuevo';
   const usuario=document.getElementById('vUsuario').value.trim()||'user'+Date.now();
   const password=document.getElementById('vPassword').value;
   let foto=document.getElementById('vFotoImg').src && document.getElementById('vFotoImg').style.display!=='none'
@@ -65,7 +65,7 @@ async function addVendedor(){
   if (foto && foto.startsWith('data:')) foto = await sbSubirImagen(foto, 'vendedores');
   
   const perms=[];
-  ['Dashboard','Punto de Venta','Productos','Clientes','Proveedores','Reportes','Vendedores','Configuración'].forEach((p,i)=>{
+  ['Dashboard','Punto de Venta','Productos','Clientes','Proveedores','Reportes','Vendedores','Configuración','Corte'].forEach((p,i)=>{
     if(document.getElementById('p'+(i+1)).checked)perms.push(p);
   });
   vendedores.push({
@@ -102,7 +102,7 @@ function editVendedor(id) {
   } else {
     quitarFotoVend();
   }
-  const permsNombres=['Dashboard','Punto de Venta','Productos','Clientes','Proveedores','Reportes','Vendedores','Configuración'];
+  const permsNombres=['Dashboard','Punto de Venta','Productos','Clientes','Proveedores','Reportes','Vendedores','Configuración','Corte'];
   permsNombres.forEach((p,i)=>{
     const el=document.getElementById('p'+(i+1)); if(el) el.checked=(v.permisos||[]).includes(p);
   });
@@ -124,8 +124,8 @@ async function guardarEditVendedor(id) {
   if(conflict){showToast('Ese nombre de usuario ya está en uso','error');return;}
   // Guardar el nombre anterior antes de modificarlo para actualizar el historial
   const nombreAnterior = (v.nombre + ' ' + (v.apellido||'')).trim();
-  v.nombre = document.getElementById('vNombre').value.trim()||v.nombre;
-  v.apellido = document.getElementById('vApellido').value.trim()||v.apellido;
+  v.nombre = limpiarTexto(document.getElementById('vNombre').value.trim())||v.nombre;
+  v.apellido = limpiarTexto(document.getElementById('vApellido').value.trim())||v.apellido;
   const nombreNuevo = (v.nombre + ' ' + (v.apellido||'')).trim();
   // Actualizar el campo vendedor en todas las ventas del historial que usen el nombre anterior
   if (nombreAnterior !== nombreNuevo) {
@@ -154,7 +154,7 @@ async function guardarEditVendedor(id) {
   const fotoAnterior = v.foto || '';
   v.foto = fotoNueva.startsWith('data:') ? await sbSubirImagen(fotoNueva, 'vendedores') : fotoNueva;
   if (fotoAnterior && fotoAnterior !== v.foto) sbBorrarImagenAnterior(fotoAnterior);
-  const permsNombres=['Dashboard','Punto de Venta','Productos','Clientes','Proveedores','Reportes','Vendedores','Configuración'];
+  const permsNombres=['Dashboard','Punto de Venta','Productos','Clientes','Proveedores','Reportes','Vendedores','Configuración','Corte'];
   v.permisos = permsNombres.filter((p,i)=>document.getElementById('p'+(i+1))?.checked);
   renderVendedores();
   closeModal('modalVendedor');
@@ -194,7 +194,7 @@ function quitarFotoVend() {
 }
 
 function toggleTodosPermisos(val) {
-  ['p1','p2','p3','p4','p5','p6','p7','p8'].forEach(id => {
+  ['p1','p2','p3','p4','p5','p6','p7','p8','p9'].forEach(id => {
     const el = document.getElementById(id); if(el) el.checked = val;
   });
 }

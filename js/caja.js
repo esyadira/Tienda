@@ -117,6 +117,108 @@ function renderCajaInicialDash() {
   el.textContent = `${moneda()} ${total.toFixed(2)}`;
 }
 
+// ========================================
+// CIERRE DE TURNO (al tocar "Cerrar Sesión")
+// ========================================
+// Muestra cuánto se vendió por cada método (efectivo, yape, tarjeta; el pago
+// mixto ya viene repartido entre los tres gracias a desgloseVenta, ver js/pagos.js)
+// y cuánto efectivo debería haber físicamente en caja: lo que había al abrir el
+// turno + lo vendido en efectivo + entradas de caja - salidas de caja.
+let _cierreEsperado = 0;
+let _cierreDesglose = { efectivo: 0, yape: 0, tarjeta: 0 };
+
+function solicitarCierreTurno() {
+  if (!currentUser) { doLogout(); return; }
+
+  const hoy = _cajaHoyISO();
+  const apertura = cajaActivaDe(currentUser);
+  const montoInicial = apertura ? (apertura.monto || 0) : 0;
+
+  const ventasHoy = (ventasHistorial || []).filter(v => v.fechaISO === hoy && v.vendedor === currentUser.nombre);
+  const desglose = ventasHoy.reduce((a, v) => {
+    const d = desgloseVenta(v);
+    a.efectivo += d.efectivo; a.yape += d.yape; a.tarjeta += d.tarjeta;
+    return a;
+  }, { efectivo: 0, yape: 0, tarjeta: 0 });
+
+  const movsHoy = (movimientosCaja || []).filter(m => m.fechaISO === hoy && m.usuario === currentUser.nombre);
+  const entradas = movsHoy.filter(m => m.tipo === 'entrada').reduce((a, m) => a + (m.monto || 0), 0);
+  const salidas = movsHoy.filter(m => m.tipo === 'salida').reduce((a, m) => a + (m.monto || 0), 0);
+
+  _cierreDesglose = desglose;
+  _cierreEsperado = Math.round((montoInicial + desglose.efectivo + entradas - salidas) * 100) / 100;
+
+  const m = moneda();
+  document.getElementById('cierreEfectivoVenta').textContent = `${m} ${desglose.efectivo.toFixed(2)}`;
+  document.getElementById('cierreYapeVenta').textContent = `${m} ${desglose.yape.toFixed(2)}`;
+  document.getElementById('cierreTarjetaVenta').textContent = `${m} ${desglose.tarjeta.toFixed(2)}`;
+  document.getElementById('cierreTotalVenta').textContent = `${m} ${(desglose.efectivo + desglose.yape + desglose.tarjeta).toFixed(2)}`;
+  document.getElementById('cierreEsperado').textContent = `${m} ${_cierreEsperado.toFixed(2)}`;
+
+  const input = document.getElementById('cierreContadoInput');
+  input.value = _cierreEsperado.toFixed(2);
+  _cierreCalcularDiferencia();
+
+  openModal('modalCierreTurno');
+}
+
+function _cierreCalcularDiferencia() {
+  const input = document.getElementById('cierreContadoInput');
+  const contado = parseFloat(input.value);
+  const difEl = document.getElementById('cierreDiferencia');
+  const okEl = document.getElementById('cierreVerdict');
+  if (isNaN(contado)) {
+    difEl.textContent = `${moneda()} 0.00`;
+    difEl.style.color = '';
+    okEl.style.display = 'none';
+    return;
+  }
+  const dif = Math.round((contado - _cierreEsperado) * 100) / 100;
+  difEl.textContent = `${dif < 0 ? '-' : ''}${moneda()} ${Math.abs(dif).toFixed(2)}`;
+  difEl.style.color = Math.abs(dif) < 0.005 ? '#10b981' : '#ef4444';
+  okEl.style.display = 'flex';
+  if (Math.abs(dif) < 0.005) {
+    okEl.className = 'cierre-verdict ok';
+    okEl.innerHTML = '<i class="fa fa-circle-check"></i> ¡Excelente! Todo en orden';
+  } else {
+    okEl.className = 'cierre-verdict warn';
+    okEl.innerHTML = dif > 0
+      ? '<i class="fa fa-triangle-exclamation"></i> Hay más efectivo del esperado'
+      : '<i class="fa fa-triangle-exclamation"></i> Falta efectivo respecto a lo esperado';
+  }
+}
+
+function confirmarCierreTurno() {
+  const input = document.getElementById('cierreContadoInput');
+  const contado = parseFloat(input.value);
+  if (isNaN(contado) || contado < 0) { showToast('Ingresa el efectivo contado', 'error'); return; }
+
+  const now = new Date();
+  const rec = {
+    id: Date.now(),
+    usuario: currentUser.user,
+    cajero: currentUser.nombre,
+    fecha: now.toLocaleDateString('es-PE'),
+    fechaISO: _cajaHoyISO(),
+    hora: now.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' }),
+    efectivoVentas: _cierreDesglose.efectivo,
+    yapeVentas: _cierreDesglose.yape,
+    tarjetaVentas: _cierreDesglose.tarjeta,
+    efectivoEsperado: _cierreEsperado,
+    efectivoContado: Math.round(contado * 100) / 100,
+    diferencia: Math.round((contado - _cierreEsperado) * 100) / 100
+  };
+  cierresTurno.push(rec);
+  guardarTodoEnLocalStorage();
+
+  closeModal('modalCierreTurno');
+  doLogout();
+}
+
+function cancelarCierreTurno() {
+  closeModal('modalCierreTurno');
+}
+
 function abrirModalCajaInicial() {
   const lista = _cajasDeHoyVisibles();
   const cont = document.getElementById('cajaDetalleLista');

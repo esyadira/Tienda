@@ -482,7 +482,10 @@ function actualizarInfoPrecios(){
 
 async function saveProduct(){
   const editId = document.getElementById('editProdId').value;
-  const nombre = document.getElementById('prodNombre').value || 'Producto Nuevo';
+  const nombre = limpiarTexto(document.getElementById('prodNombre').value.trim());
+  if (!nombre) {
+    return showToast('Ingresa un nombre para el producto', 'error');
+  }
 
   // Capturar valores de los inputs
   let cat = document.getElementById('prodCatVal').value || document.getElementById('prodCatInput').value || 'Otros';
@@ -491,7 +494,7 @@ async function saveProduct(){
   const costo = _numCampo('prodCosto');
   const stock = parseInt(document.getElementById('prodStock').value) || 0;
   const stockMin = parseInt(document.getElementById('prodStockMin').value) || 3;
-  const codigo = document.getElementById('prodBarcode').value || genCode();
+  const codigo = document.getElementById('prodBarcode').value.trim() || genCode();
   const imgEl = document.getElementById('imgPreview');
   const imgPrevia = editId ? ((productos.find(p => p.id === parseInt(editId)) || {}).img || '') : '';
   let img = imgEl.style.display !== 'none' ? imgEl.src : '';

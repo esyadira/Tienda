@@ -32,6 +32,7 @@
     'js/vendedores.js',
     'js/reportes.js',
     'js/reportes-inventario.js',
+    'js/reportes-ventas.js',
     'js/graficos.js',
     'js/utilidades.js',
     'js/respaldo.js',
@@ -42,6 +43,7 @@
     'js/pos-extras.js',
     'js/reportes-salidas.js',
     'js/caja.js',
+    'js/corte.js',
     'js/sidebar.js',
     'js/main.js',
     'js/pwa.js'
