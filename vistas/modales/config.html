@@ -226,7 +226,7 @@
           <div class="form-field" style="margin-left:16px;margin-top:8px;">
             <label>Avisar cuando el stock sea menor o igual a:</label>
             <div style="display:flex;align-items:center;gap:10px;">
-              <input type="number" id="cfg-min-stock" min="1" max="100" style="max-width:100px;" oninput="actualizarPreviewAlertaStock(this.value)" onchange="settings.alertas.minStock=parseInt(this.value)||3;localStorage.setItem('bodega_settings',JSON.stringify(settings));updateStockBajoCount();actualizarNotificaciones();">
+              <input type="number" id="cfg-min-stock" min="1" max="100" style="max-width:100px;" oninput="actualizarPreviewAlertaStock(this.value)">
               <span id="cfg-stock-min-preview" style="font-size:12px;color:var(--text3);">unidades</span>
             </div>
             <small id="cfg-stock-preview-msg" style="font-size:11px;color:var(--warning);display:block;margin-top:4px;"></small>
@@ -242,7 +242,7 @@
           <div class="form-field" style="margin-left:16px;margin-top:8px;">
             <label>Monto máximo de deuda permitido (S/.)</label>
             <div style="display:flex;align-items:center;gap:10px;">
-              <input type="number" id="cfg-monto-deuda" min="1" style="max-width:120px;" oninput="actualizarPreviewAlertaDeuda(this.value)" onchange="const _v=parseFloat(this.value);if(!isNaN(_v)&&_v>0){settings.alertas.montoDeuda=_v;localStorage.setItem('bodega_settings',JSON.stringify(settings));actualizarDeudaAltaCount();renderClients();actualizarNotificaciones();actualizarDashboardReal();}">
+              <input type="number" id="cfg-monto-deuda" min="1" style="max-width:120px;" oninput="actualizarPreviewAlertaDeuda(this.value)">
               <span id="cfg-deuda-preview" style="font-size:12px;color:var(--text3);"></span>
             </div>
           </div>
@@ -284,7 +284,7 @@
               <input type="checkbox" id="cfg-margen-auto" onchange="toggleMargenAuto(this.checked)" style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;">
               <span style="font-size:13px;color:var(--text);line-height:1.5;">Calcular automáticamente precio de venta con el margen de ganancia del
                 <span id="cfg-margen-pct-wrap" style="display:inline-flex;align-items:center;gap:2px;transition:opacity 0.2s;">
-                  <input type="number" id="cfg-margen-pct" min="0" step="1" value="20" onchange="settings.sistema.margenPct=parseFloat(this.value)||0;localStorage.setItem('bodega_settings',JSON.stringify(settings));" style="width:56px;padding:3px 4px;text-align:center;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:'Sora',sans-serif;font-size:13px;">%
+                  <input type="number" id="cfg-margen-pct" min="0" step="1" value="20" style="width:56px;padding:3px 4px;text-align:center;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:'Sora',sans-serif;font-size:13px;">%
                 </span>
                 al crear, modificar o ingresar inventario a los productos.</span>
             </label>

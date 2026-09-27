@@ -3,25 +3,96 @@
 
         <!-- Tabs de reportes + controles alineados -->
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:16px;overflow-x:auto;padding-bottom:4px;border-bottom:1px solid var(--border);flex-shrink:0;">
-          <button class="rep-tab-btn active" onclick="showReporte(this,'rep-vendedores')">
-            <i class="fa fa-id-badge" style="margin-right:6px;color:#a855f7;"></i>Usuarios
+          <button class="rep-tab-btn active" onclick="showReporte(this,'rep-ventas')">
+            <i class="fa fa-chart-line" style="margin-right:6px;color:var(--accent);"></i>Resumen de Ventas
           </button>
-          <button class="rep-tab-btn" onclick="showReporte(this,'rep-cerveza')">
-            🍺 Cervezas
+          <button class="rep-tab-btn" onclick="showReporte(this,'rep-vendedores')">
+            <i class="fa fa-id-badge" style="margin-right:6px;color:#a855f7;"></i>Usuarios
           </button>
           <button class="rep-tab-btn" onclick="showReporte(this,'rep-yape')">
             <i class="fa fa-mobile-screen" style="margin-right:6px;color:#7c3aed;"></i>Yape
+          </button>
+          <button class="rep-tab-btn" onclick="showReporte(this,'rep-tarjeta')">
+            <i class="fa fa-credit-card" style="margin-right:6px;color:#0ea5e9;"></i>Tarjeta
           </button>
           <button class="rep-tab-btn" onclick="showReporte(this,'rep-inventario')">
             <i class="fa fa-money-bill-wave" style="margin-right:6px;color:#10b981;"></i>Efectivo
           </button>
           <div style="margin-left:auto;display:flex;gap:6px;align-items:center;flex-shrink:0;">
-            <div style="display:flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:4px 10px;">
-              <i class="fa fa-calendar" style="color:var(--text3);font-size:12px;"></i>
-              <input type="date" id="repFechaInput" onchange="renderReportes()" style="background:transparent;border:none;color:var(--text);font-family:'Sora',sans-serif;font-size:13px;outline:none;cursor:pointer;">
+            <div id="repToolbarDiaExtra" style="display:none;gap:6px;align-items:center;flex-shrink:0;">
+              <div style="display:flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:4px 10px;">
+                <i class="fa fa-calendar" style="color:var(--text3);font-size:12px;"></i>
+                <input type="date" id="repFechaInput" onchange="renderReportes()" style="background:transparent;border:none;color:var(--text);font-family:'Sora',sans-serif;font-size:13px;outline:none;cursor:pointer;">
+              </div>
+              <button class="btn btn-sm" onclick="eliminarReporteDia()" style="background:rgba(239,68,68,0.12);color:var(--danger);border:1px solid rgba(239,68,68,0.3);"><i class="fa fa-trash"></i> Eliminar día</button>
             </div>
-            <button class="btn btn-sm" onclick="eliminarReporteDia()" style="background:rgba(239,68,68,0.12);color:var(--danger);border:1px solid rgba(239,68,68,0.3);"><i class="fa fa-trash"></i> Eliminar día</button>
             <button class="btn btn-primary btn-sm" onclick="exportarReporteActivo()"><i class="fa fa-file-excel"></i> Exportar</button>
+          </div>
+        </div>
+
+        <!-- REP VENTAS (RESUMEN GENERAL) -->
+        <div id="rep-ventas" class="rep-panel" style="display:flex;">
+
+          <!-- Selector de periodo -->
+          <div class="repv-toolbar">
+            <div class="repv-periods" id="repvPeriodBtns">
+              <button class="repv-period-btn active" data-period="semana" onclick="cambiarPeriodoVentas('semana')">Semana Actual</button>
+              <button class="repv-period-btn" data-period="mes" onclick="cambiarPeriodoVentas('mes')">Mes Actual</button>
+              <button class="repv-period-btn" data-period="mesAnterior" onclick="cambiarPeriodoVentas('mesAnterior')">Mes Anterior</button>
+              <button class="repv-period-btn" data-period="anio" onclick="cambiarPeriodoVentas('anio')">Año Actual</button>
+              <button class="repv-period-btn" data-period="custom" onclick="cambiarPeriodoVentas('custom')"><i class="fa fa-calendar-week"></i> Periodo…</button>
+            </div>
+            <div class="repv-custom-range" id="repvCustomRange">
+              <input type="date" id="repvFechaDesde" onchange="renderReportes('rep-ventas')">
+              <span>—</span>
+              <input type="date" id="repvFechaHasta" onchange="renderReportes('rep-ventas')">
+            </div>
+            <div class="repv-rango-label" id="repvRangoLabel"></div>
+          </div>
+
+          <div style="flex:1;overflow-y:auto;min-height:0;padding-right:4px;">
+
+            <!-- KPIs -->
+            <div id="repvKpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:16px;"></div>
+
+            <!-- Chart principal: Ventas y Ganancia -->
+            <div class="repv-card" style="margin-bottom:16px;">
+              <div class="repv-card-head">
+                <span><i class="fa fa-chart-column"></i> Ventas y Ganancia</span>
+                <div class="repv-legend" id="repvChartLegend"></div>
+              </div>
+              <div id="repvChartWrap"></div>
+            </div>
+
+            <!-- Grid inferior: tabla / departamento / forma de pago -->
+            <div class="repv-grid3">
+              <div class="repv-card">
+                <div class="repv-card-head">
+                  <span><i class="fa fa-calendar-days"></i> Ventas por Periodo</span>
+                  <span class="repv-pill" id="repvTablaCant"></span>
+                </div>
+                <div class="repv-tabla-wrap">
+                  <table>
+                    <thead><tr><th>Periodo</th><th style="text-align:right;">Ventas</th></tr></thead>
+                    <tbody id="repvTablaBody"></tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div class="repv-card">
+                <div class="repv-card-head"><span><i class="fa fa-layer-group"></i> Ventas por Categoría</span></div>
+                <div class="repv-donut-wrap">
+                  <svg viewBox="0 0 100 100" id="repvDonutSvg" class="repv-donut-svg"></svg>
+                  <div class="repv-donut-legend" id="repvDonutLegend"></div>
+                </div>
+              </div>
+
+              <div class="repv-card">
+                <div class="repv-card-head"><span><i class="fa fa-money-bill-transfer"></i> Ventas por Forma de Pago</span></div>
+                <div id="repvPagosChart" class="repv-pagos-wrap"></div>
+              </div>
+            </div>
+
           </div>
         </div>
 
@@ -55,31 +126,6 @@
               <tbody id="repDiaTbody"></tbody>
             </table>
             </div>
-          </div>
-        </div>
-
-        <!-- REP CERVEZA -->
-        <div id="rep-cerveza" class="rep-panel" style="display:flex;">
-          <div id="repCervezaSummary" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:16px;flex-shrink:0;"></div>
-          <!-- select oculto para que el JS pueda leer el filtro sin mostrarlo -->
-          <select id="repCervezaVendSelect" style="display:none;"><option value="todos">Todos los usuarios</option></select>
-          <div class="table-wrap">
-            <div style="padding:12px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-shrink:0;">
-              <span style="font-size:16px;">🍺</span>
-              <span style="font-size:13px;font-weight:700;">Ventas de Cervezas</span>
-              <span id="repCervezaCant" style="margin-left:auto;font-size:11px;color:var(--text3);background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:2px 10px;"></span>
-            </div>
-            <div style="flex:1;overflow-y:auto;min-height:0;"><table style="width:100%;border-collapse:collapse;">
-              <thead style="position:sticky;top:0;z-index:10;background:var(--surface2);"><tr>
-                <th style="width: 100px;">Fecha</th>
-                <th style="width: 200px;">Vendedor</th>
-                <th style="width: 250px;">Producto</th>
-                <th style="text-align:center;">Cantidad</th>
-                <th style="width: 100px;">Método</th>
-                <th style="width: 120px; text-align:right;">Total</th>
-              </tr></thead>
-              <tbody id="repCervezaBody"></tbody>
-            </table></div>
           </div>
         </div>
 
@@ -122,6 +168,34 @@
                 </tr>
               </thead>
               <tbody id="repYapeBody"></tbody>
+            </table></div>
+          </div>
+        </div>
+
+        <!-- REP TARJETA -->
+        <div id="rep-tarjeta" class="rep-panel" style="display:none;">
+          <div id="repTarjetaSummary" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:16px;flex-shrink:0;"></div>
+          <!-- select oculto para que el JS pueda leer el filtro sin mostrarlo -->
+          <select id="repTarjetaVendSelect" style="display:none;"><option value="todos">Todos los usuarios</option></select>
+          <div class="table-wrap">
+            <div style="padding:12px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:8px;flex-shrink:0;">
+              <i class="fa fa-credit-card" style="color:#0ea5e9;"></i>
+              <span style="font-size:13px; font-weight:700;">Pagos con Tarjeta</span>
+              <span id="repTarjetaCant" style="margin-left:auto;font-size:11px;color:var(--text3);background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:2px 10px;"></span>
+            </div>
+            <div style="flex:1;overflow-y:auto;min-height:0;"><table style="width:100%;border-collapse:collapse;">
+              <thead style="position:sticky;top:0;z-index:10;background:var(--surface2);">
+                <tr>
+                  <th style="width: 50px;">Fecha</th>
+                  <th style="width: 100px;">Hora</th>
+                  <th style="width: 100px;">Cliente</th>
+                  <th style="width: 250px;">Productos</th>
+                  <th style="width: 100px;">Método</th>
+                  <th style="width: 120px; text-align:right;">Monto</th>
+                  <th style="text-align:center;width:42px;"></th>
+                </tr>
+              </thead>
+              <tbody id="repTarjetaBody"></tbody>
             </table></div>
           </div>
         </div>

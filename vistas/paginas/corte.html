@@ -1,0 +1,95 @@
+      <!-- ===== CORTE ===== -->
+      <div class="page" id="page-corte">
+        <div class="page-header">
+          <div class="page-title"><h1>Corte</h1><p>Resumen de caja y ventas</p></div>
+          <div class="corte-modo-btns">
+            <button class="btn btn-secondary" id="corteBtnCajero" onclick="corteCambiarModo('cajero')">
+              <i class="fa fa-user-clock"></i> Hacer corte de cajero
+            </button>
+            <button class="btn btn-secondary" id="corteBtnDia" onclick="corteCambiarModo('dia')">
+              <i class="fa fa-calendar-day"></i> Hacer corte del día
+            </button>
+          </div>
+        </div>
+
+        <div class="corte-scope-bar">
+          <div>
+            <div class="corte-scope-titulo" id="corteScopeTitulo">Corte de ...</div>
+            <div class="corte-scope-rango" id="corteScopeRango">De las - a las -</div>
+          </div>
+          <div class="corte-scope-fecha" id="corteFechaWrap" style="display:none;">
+            <i class="fa fa-calendar"></i>
+            <input type="date" id="corteFechaInput" onchange="renderCorte()">
+          </div>
+        </div>
+
+        <div class="corte-cols">
+
+          <!-- ===== COLUMNA IZQUIERDA ===== -->
+          <div class="corte-col">
+
+            <div class="corte-kpi-block">
+              <div class="corte-kpi-icon" style="color:#3b82f6;"><i class="fa fa-sack-dollar"></i></div>
+              <div>
+                <div class="corte-kpi-label">Ventas Totales</div>
+                <div class="corte-kpi-valor" id="corteVentasTotales" style="color:#3b82f6;">S/ 0.00</div>
+              </div>
+            </div>
+
+            <div class="corte-seccion">
+              <div class="corte-seccion-head"><i class="fa fa-cash-register"></i> Dinero en Caja</div>
+              <div class="corte-lineas" id="corteDineroCajaLineas"></div>
+            </div>
+
+            <div class="corte-seccion">
+              <div class="corte-seccion-head"><i class="fa fa-download"></i> Entradas de efectivo</div>
+              <div class="corte-lista" id="corteEntradasLista"></div>
+            </div>
+
+            <div class="corte-seccion">
+              <div class="corte-seccion-head"><i class="fa fa-file-lines"></i> Ventas por Categoría</div>
+              <div class="corte-lista" id="corteDeptoLista"></div>
+            </div>
+
+          </div>
+
+          <!-- ===== COLUMNA DERECHA ===== -->
+          <div class="corte-col">
+
+            <div class="corte-kpi-block">
+              <div class="corte-kpi-icon" style="color:#10b981;"><i class="fa fa-chart-line"></i></div>
+              <div>
+                <div class="corte-kpi-label">Ganancia</div>
+                <div class="corte-kpi-valor" id="corteGanancia" style="color:#10b981;">S/ 0.00</div>
+              </div>
+            </div>
+
+            <div class="corte-seccion">
+              <div class="corte-seccion-head"><i class="fa fa-basket-shopping"></i> Ventas</div>
+              <div class="corte-lineas" id="corteVentasLineas"></div>
+            </div>
+
+            <div class="corte-seccion">
+              <div class="corte-seccion-head"><i class="fa fa-money-bill-transfer"></i> Ingresos de contado</div>
+              <div class="corte-lista" id="corteContadoLista"></div>
+            </div>
+
+            <div class="corte-seccion">
+              <div class="corte-seccion-head"><i class="fa fa-upload"></i> Salidas de Efectivo</div>
+              <div class="corte-lista" id="corteSalidasLista"></div>
+            </div>
+
+            <div class="corte-seccion">
+              <div class="corte-seccion-head"><i class="fa fa-user-group"></i> Clientes con más ventas</div>
+              <div class="corte-lista" id="corteTopVentasLista"></div>
+            </div>
+
+            <div class="corte-seccion">
+              <div class="corte-seccion-head"><i class="fa fa-user-group"></i> Clientes con más ganancia</div>
+              <div class="corte-lista" id="corteTopGananciaLista"></div>
+            </div>
+
+          </div>
+
+        </div>
+      </div>

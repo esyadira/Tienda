@@ -1,0 +1,56 @@
+<!-- Cierre de turno: aparece al tocar "Cerrar Sesión" (ver js/caja.js → solicitarCierreTurno) -->
+<div class="modal-overlay" id="modalCierreTurno">
+  <div class="modal cierre-modal">
+    <div class="modal-header cierre-header">
+      <h3><i class="fa fa-lock"></i> Cierre de turno</h3>
+      <div class="modal-close" onclick="cancelarCierreTurno()"><i class="fa fa-xmark"></i></div>
+    </div>
+    <div class="modal-body">
+      <p class="cierre-intro">Por favor cuenta el dinero en caja e ingrésalo para proceder con el cierre de turno.</p>
+
+      <div class="cierre-metodos">
+        <div class="cierre-fila">
+          <span><i class="fa fa-money-bill" style="color:#10b981;"></i> Efectivo</span>
+          <strong id="cierreEfectivoVenta">S/ 0.00</strong>
+        </div>
+        <div class="cierre-fila">
+          <span><i class="fa fa-mobile-screen" style="color:#7c3aed;"></i> Yape</span>
+          <strong id="cierreYapeVenta">S/ 0.00</strong>
+        </div>
+        <div class="cierre-fila">
+          <span><i class="fa fa-credit-card" style="color:#0ea5e9;"></i> Tarjeta</span>
+          <strong id="cierreTarjetaVenta">S/ 0.00</strong>
+        </div>
+        <div class="cierre-fila cierre-fila-total">
+          <span>Total vendido</span>
+          <strong id="cierreTotalVenta">S/ 0.00</strong>
+        </div>
+      </div>
+
+      <div class="cierre-fila cierre-esperado">
+        <span>Efectivo esperado en caja</span>
+        <strong id="cierreEsperado">S/ 0.00</strong>
+      </div>
+
+      <div class="form-field" style="margin-top:14px;">
+        <label>¿Cuánto efectivo hay en Caja?</label>
+        <div class="caja-input-wrap">
+          <span>S/</span>
+          <input type="number" id="cierreContadoInput" placeholder="0.00" step="0.10" min="0" inputmode="decimal"
+            oninput="_cierreCalcularDiferencia()" onkeydown="if(event.key==='Enter')confirmarCierreTurno()">
+        </div>
+      </div>
+
+      <div class="cierre-fila" style="margin-top:12px;">
+        <span>Diferencia</span>
+        <strong id="cierreDiferencia">S/ 0.00</strong>
+      </div>
+
+      <div id="cierreVerdict" class="cierre-verdict ok" style="display:none;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="cancelarCierreTurno()">Cancelar</button>
+      <button class="btn btn-primary" onclick="confirmarCierreTurno()"><i class="fa fa-lock"></i> Cerrar Turno</button>
+    </div>
+  </div>
+</div>
