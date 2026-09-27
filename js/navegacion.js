@@ -72,17 +72,12 @@ function showPage(pageId) {
     document.activeElement.blur();
   }
 
-  // Limpiar carrito de POS al salir de ventas
+  // Ya NO se limpia el carrito de POS al salir de ventas: si se sale por error
+  // (o se confunde al cobrar), los productos quedan guardados y siguen ahí
+  // al volver a la pantalla de Ventas. Solo se limpia el buscador de productos.
   if (pageId !== 'ventas') {
-    if (typeof carrito !== 'undefined' && carrito.length > 0) {
-      carrito = [];
-      selectedClientePOS = null;
-      bottleOwed = null;
-      if (typeof clearClientSel === 'function') clearClientSel();
-      if (typeof renderCart === 'function') renderCart();
-      const posInput = document.querySelector('#page-ventas .table-search input');
-      if (posInput) { posInput.value = ''; if (typeof renderPOSProducts === 'function') renderPOSProducts('',''); }
-    }
+    const posInput = document.querySelector('#page-ventas .table-search input');
+    if (posInput) posInput.value = '';
   }
 
   // Controlar scroll del main según la página
